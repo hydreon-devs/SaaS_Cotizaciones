@@ -1,6 +1,7 @@
 import { FileText } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const location = useLocation();
@@ -40,12 +41,15 @@ const Header = () => {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" />
-            <AvatarFallback>CM</AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-foreground">Carlos Méndez</span>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" />
+              <AvatarFallback>CM</AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-foreground">Carlos Méndez</span>
+          </div>
         </div>
       </div>
     </header>

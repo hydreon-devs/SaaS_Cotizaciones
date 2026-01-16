@@ -1,9 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check, Trash2, Edit, User } from "lucide-react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { plantillasMock } from "@/data/plantillas";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PlantillaCotizacion } from "@/types/cotizacion";
+import { PlantillasService } from "@/services/plantillasService";
+import { toast } from "sonner";
 
 const iconMap: Record<string, React.ReactNode> = {
   Building2: <Building2 className="h-8 w-8" />,
@@ -14,12 +35,93 @@ const iconMap: Record<string, React.ReactNode> = {
   FileText: <FileText className="h-8 w-8" />,
 };
 
+// Opciones de iconos y colores
+const iconOptions = [
+  { value: "Building2", label: "Edificio" },
+  { value: "Heart", label: "Corazón" },
+  { value: "Presentation", label: "Presentación" },
+  { value: "PartyPopper", label: "Fiesta" },
+  { value: "Rocket", label: "Cohete" },
+  { value: "FileText", label: "Archivo" },
+];
+
+const colorOptions = [
+  { value: "bg-blue-500", label: "Azul" },
+  { value: "bg-pink-500", label: "Rosa" },
+  { value: "bg-green-500", label: "Verde" },
+  { value: "bg-purple-500", label: "Púrpura" },
+  { value: "bg-orange-500", label: "Naranja" },
+  { value: "bg-gray-500", label: "Gris" },
+];
+
 const Plantillas = () => {
   const navigate = useNavigate();
+  const [plantillas, setPlantillas] = useState<PlantillaCotizacion[]>([]);
+  const [dialogEditarAbierto, setDialogEditarAbierto] = useState(false);
+  const [plantillaEditando, setPlantillaEditando] = useState<PlantillaCotizacion | null>(null);
+  const [nombreEditar, setNombreEditar] = useState("");
+  const [descripcionEditar, setDescripcionEditar] = useState("");
+  const [iconoEditar, setIconoEditar] = useState("");
+  const [colorEditar, setColorEditar] = useState("");
+
+  // Cargar plantillas desde localStorage al montar el componente
+  useEffect(() => {
+    cargarPlantillas();
+  }, []);
+
+  const cargarPlantillas = () => {
+    const plantillasGuardadas = PlantillasService.obtenerTodas();
+    setPlantillas(plantillasGuardadas);
+  };
 
   const handleSeleccionarPlantilla = (plantilla: PlantillaCotizacion) => {
     // Navegar a /nueva con los datos de la plantilla
     navigate("/nueva", { state: { plantilla: plantilla.datos } });
+  };
+
+  const handleAbrirEditar = (plantilla: PlantillaCotizacion, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPlantillaEditando(plantilla);
+    setNombreEditar(plantilla.nombre);
+    setDescripcionEditar(plantilla.descripcion);
+    setIconoEditar(plantilla.icono);
+    setColorEditar(plantilla.color);
+    setDialogEditarAbierto(true);
+  };
+
+  const handleGuardarEdicion = () => {
+    if (!plantillaEditando) return;
+
+    if (!nombreEditar.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+
+    try {
+      PlantillasService.actualizar(plantillaEditando.id, {
+        nombre: nombreEditar,
+        descripcion: descripcionEditar,
+        icono: iconoEditar,
+        color: colorEditar,
+      });
+
+      cargarPlantillas();
+      setDialogEditarAbierto(false);
+      toast.success("Plantilla actualizada correctamente");
+    } catch (error) {
+      toast.error("Error al actualizar la plantilla");
+    }
+  };
+
+  const handleEliminarPlantilla = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      PlantillasService.eliminar(id);
+      cargarPlantillas();
+      toast.success("Plantilla eliminada correctamente");
+    } catch (error) {
+      toast.error("Error al eliminar la plantilla");
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -49,8 +151,22 @@ const Plantillas = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plantillasMock.map((plantilla) => (
+        {plantillas.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              No hay plantillas guardadas
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Crea tu primera plantilla desde el cotizador
+            </p>
+            <Button onClick={() => navigate("/nueva")}>
+              Crear Nueva Cotización
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plantillas.map((plantilla) => (
             <Card
               key={plantilla.id}
               className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all duration-200 group"
@@ -96,25 +212,132 @@ const Plantillas = () => {
                         </li>
                       )}
                     </ul>
-                    <div className="pt-3 border-t border-border">
+                    <div className="pt-3 border-t border-border space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-muted-foreground">Valor base:</span>
                         <span className="font-semibold text-primary">
                           {formatCurrency(calcularTotal(plantilla))}
                         </span>
                       </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>Creada por: {plantilla.autor}</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="py-4 text-center text-sm text-muted-foreground">
-                    Comienza con una cotización vacía
+                  <div className="space-y-3">
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      Comienza con una cotización vacía
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-center">
+                      <User className="h-3 w-3" />
+                      <span>Creada por: {plantilla.autor}</span>
+                    </div>
                   </div>
                 )}
+                <div className="mt-4 pt-3 border-t border-border flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={(e) => handleAbrirEditar(plantilla, e)}
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-destructive hover:text-destructive"
+                    onClick={(e) => handleEliminarPlantilla(plantilla.id, e)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Eliminar
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
+        )}
       </main>
+
+      {/* Diálogo para editar plantilla */}
+      <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Plantilla</DialogTitle>
+            <DialogDescription>
+              Modifica los detalles de la plantilla.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="nombre-editar">
+                Nombre de la plantilla <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="nombre-editar"
+                value={nombreEditar}
+                onChange={(e) => setNombreEditar(e.target.value)}
+                placeholder="Nombre de la plantilla"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descripcion-editar">Descripción</Label>
+              <Textarea
+                id="descripcion-editar"
+                value={descripcionEditar}
+                onChange={(e) => setDescripcionEditar(e.target.value)}
+                placeholder="Descripción de la plantilla"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="icono-editar">Ícono</Label>
+                <Select value={iconoEditar} onValueChange={setIconoEditar}>
+                  <SelectTrigger id="icono-editar">
+                    <SelectValue placeholder="Selecciona un ícono" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {iconOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="color-editar">Color</Label>
+                <Select value={colorEditar} onValueChange={setColorEditar}>
+                  <SelectTrigger id="color-editar">
+                    <SelectValue placeholder="Selecciona un color" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colorOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded ${option.value}`} />
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogEditarAbierto(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGuardarEdicion}>Guardar Cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

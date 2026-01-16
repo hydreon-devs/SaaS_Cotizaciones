@@ -18,7 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TEST_CREDENTIALS = {
   email: "admin@cotizaciones.cl",
   password: "admin123",
-  name: "Carlos Méndez",
+  name: "Admin",
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {

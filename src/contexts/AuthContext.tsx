@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { signIn } from "../api/singin";
 
 interface User {
+  token: string;
   email: string;
   name: string;
 }
@@ -24,6 +26,11 @@ const TEST_CREDENTIALS = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
+
   // Cargar sesión desde localStorage al montar
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -34,27 +41,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simular delay de API
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // await new Promise((resolve) => setTimeout(resolve, 800));
 
-    if (
-      email === TEST_CREDENTIALS.email &&
-      password === TEST_CREDENTIALS.password
-    ) {
-      const userData = {
-        email: TEST_CREDENTIALS.email,
-        name: TEST_CREDENTIALS.name,
-      };
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-      return true;
-    }
+    const { data, error } = await signIn(email, password);
 
-    return false;
-  };
+    if (error) return false;
+    
+    console.log(data);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
+    const userData = {
+      token: data.session?.access_token,
+      email: data.user?.email,
+      name: data.user?.user_metadata.name,
+    };
+
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+    return true;
+
+  //   if (
+  //     email === TEST_CREDENTIALS.email &&
+  //     password === TEST_CREDENTIALS.password
+  //   ) {
+  //     const userData = {
+  //       email: TEST_CREDENTIALS.email,
+  //       name: TEST_CREDENTIALS.name,
+  //     };
+  //     setUser(userData);
+  //     localStorage.setItem("user", JSON.stringify(userData));
+  //     return true;
+  //   }
+
+  //   return false;
+  // };
+
+  // const logout = () => {
+  //   setUser(null);
+  //   localStorage.removeItem("user");
   };
 
   return (

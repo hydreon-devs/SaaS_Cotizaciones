@@ -159,8 +159,8 @@ Escenario: Empleado intenta eliminar
 | Ticket | Descripción                                      | Estado         |
 |--------|--------------------------------------------------|----------------|
 | HU-01  | Autenticación y Gestión de Roles con Supabase    | ⬜ Sin completar |
-| HU-02  | Gestión de Plantillas (CRUD)                     | ⬜ Sin completar |
-| HU-03  | Visualización de Plantillas (Cards)              | ⬜ Sin completar |
+| HU-02  | Gestión de Plantillas (CRUD)                     | Completado     |
+| HU-03  | Visualización de Plantillas (Cards)              | Completado     |
 | HU-04  | Historial y Filtrado de Cotizaciones             | ⬜ Sin completar |
 | HU-05  | Exportación a Word (Docx)                        | ⬜ Sin completar |
 | HU-06  | Eliminación de Cotizaciones (Solo Admin)         | ⬜ Sin completar |

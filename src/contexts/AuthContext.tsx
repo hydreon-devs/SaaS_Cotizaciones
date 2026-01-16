@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { signIn } from "../api/singin";
-
+import { signIn } from "../api/auth/singin";
+import { getSession } from "../api/auth/getSession";
+import { singout } from "../api/auth/singout";
 interface User {
   token: string;
   email: string;
@@ -10,8 +11,9 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,18 +27,41 @@ const TEST_CREDENTIALS = {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
-    localStorage.removeItem("user");
+    await singout();
   };
 
   // Cargar sesión desde localStorage al montar
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    (async () => {
+      setIsLoading(true);
+      const { data, error } = await getSession();
+
+      if (error) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.session) {
+        const sessionUser = data.session.user;
+        const userData = {
+          token: data.session.access_token,
+          email: sessionUser.email ?? "",
+          name: sessionUser.user_metadata?.name ?? "",
+        };
+
+        setUser(userData);
+        setIsLoading(false);
+        return;
+      }
+
+      setUser(null);
+      setIsLoading(false);
+    })();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -50,13 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log(data);
 
     const userData = {
-      token: data.session?.access_token,
-      email: data.user?.email,
-      name: data.user?.user_metadata.name,
+      token: data.session?.access_token ?? "",
+      email: data.user?.email ?? "",
+      name: data.user?.user_metadata?.name ?? "",
     };
 
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
     return true;
 
   //   if (
@@ -82,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isAuthenticated: !!user }}
+      value={{ user, login, logout, isAuthenticated: !!user, isLoading }}
     >
       {children}
     </AuthContext.Provider>

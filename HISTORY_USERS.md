@@ -152,6 +152,140 @@ Escenario: Empleado intenta eliminar
   Entonces no ve la opción de eliminar o el sistema bloquea la acción
 ```
 
+### HU-07 - Gestion de Servicios (CRUD)
+
+**Descripcion:**  
+El sistema debe permitir crear, listar, editar y eliminar servicios base que luego se usaran para construir cotizaciones. Los servicios se almacenan en Supabase y quedan disponibles para todos los usuarios.
+
+#### Detalles Tecnicos
+
+- Tabla de servicios en Supabase.
+- Campos requeridos: nombre, descripcion, precio base, estado (activo/inactivo), fecha de creacion.
+- Operaciones CRUD expuestas desde el frontend con validaciones basicas.
+
+#### Criterios de Aceptacion
+
+```gherkin
+Escenario: Crear servicio
+  Dado que el usuario esta en la seccion de servicios
+  Cuando completa el formulario y guarda
+  Entonces el servicio se crea en Supabase y aparece en la lista
+
+Escenario: Editar o eliminar servicio
+  Dado que el usuario selecciona un servicio existente
+  Cuando modifica sus datos o lo elimina
+  Entonces los cambios se reflejan o el registro se borra en Supabase
+```
+
+---
+
+### HU-09 - Gestion de Productos por Servicio (CRUD)
+
+**Descripcion:**  
+Los productos hacen parte de un servicio. El sistema debe permitir crear, listar, editar y eliminar productos asociados a un servicio especifico, persistiendo la relacion en Supabase.
+
+#### Detalles Tecnicos
+
+- Tabla de productos en Supabase con relacion a servicios (FK id_servicio).
+- Campos requeridos: nombre, descripcion, unidad, precio, cantidad por defecto, id_servicio.
+- CRUD de productos filtrado por servicio seleccionado.
+
+#### Criterios de Aceptacion
+
+```gherkin
+Escenario: Crear producto para un servicio
+  Dado que el usuario selecciona un servicio
+  Cuando agrega un producto con sus datos
+  Entonces el producto queda asociado al servicio en Supabase
+
+Escenario: Editar o eliminar producto
+  Dado que el usuario visualiza los productos de un servicio
+  Cuando edita o elimina uno
+  Entonces el cambio se refleja o se elimina en Supabase y la lista se actualiza
+```
+
+
+---
+
+### HU-10 - Listado de Servicios y Productos para Cotizar
+
+**Descripcion:**  
+El sistema debe mostrar un listado de servicios con sus productos asociados para que el usuario pueda seleccionarlos al crear una cotizacion.
+
+#### Detalles Tecnicos
+
+- Consulta a Supabase que incluya servicios y sus productos relacionados.
+- UI con lista jerarquica (servicio > productos) y controles de seleccion.
+- Al seleccionar productos se agregan al estado de la cotizacion en curso.
+
+#### Criterios de Aceptacion
+
+```gherkin
+Escenario: Cargar listado de servicios con productos
+  Dado que el usuario ingresa a la creacion de una cotizacion
+  Cuando la pagina termina de cargar
+  Entonces se muestran los servicios con sus productos asociados
+
+Escenario: Seleccionar productos para cotizar
+  Dado que el usuario visualiza el listado
+  Cuando selecciona productos de un servicio
+  Entonces los productos quedan agregados a la cotizacion en curso
+```
+
+---
+
+### HU-11 - Guardar Cotizacion con Seleccion Completa
+
+**Descripcion:**  
+El sistema debe permitir almacenar la cotizacion con todos los servicios y productos seleccionados, junto con la informacion del cliente, en Supabase.
+
+#### Detalles Tecnicos
+
+- Tabla de cotizaciones en Supabase con referencia al usuario creador.
+- Detalle de items (servicio/producto) almacenado como relacion o JSON segun el modelo.
+- Accion de guardado desde la UI con confirmacion y manejo de errores.
+
+#### Criterios de Aceptacion
+
+```gherkin
+Escenario: Guardar cotizacion
+  Dado que el usuario tiene servicios y productos seleccionados
+  Cuando presiona guardar cotizacion
+  Entonces se crea el registro en Supabase con todos los datos seleccionados
+
+Escenario: Confirmacion de guardado
+  Dado que la cotizacion se guarda correctamente
+  Cuando el sistema responde
+  Entonces se muestra un mensaje de confirmacion al usuario
+```
+
+---
+
+## HU-12 - Reutilizacion de Cotizacion desde Historial
+
+**Descripcion:**  
+El sistema debe permitir seleccionar una cotizacion del historial para ver su detalle y crear una nueva cotizacion a partir de ella, reutilizando los datos seleccionados.
+
+### Detalles Tecnicos
+
+- Vista de detalle de cotizacion con todos los servicios y productos.
+- Accion "Crear nueva desde esta" que clona la informacion en la cotizacion en curso.
+- Reutiliza el flujo de hidratacion existente para cargar la nueva cotizacion.
+
+### Criterios de Aceptacion
+
+```gherkin
+Escenario: Ver detalle de una cotizacion del historial
+  Dado que el usuario esta en el historial
+  Cuando selecciona una cotizacion
+  Entonces se muestra el detalle completo de la cotizacion
+
+Escenario: Crear nueva cotizacion desde historial
+  Dado que el usuario visualiza el detalle de una cotizacion
+  Cuando elige crear una nueva cotizacion desde esta
+  Entonces se carga una nueva cotizacion con los datos de la seleccion
+```
+
 ---
 
 ## Resumen de Tareas
@@ -164,3 +298,8 @@ Escenario: Empleado intenta eliminar
 | HU-04  | Historial y Filtrado de Cotizaciones             | ⬜ Sin completar |
 | HU-05  | Exportación a Word (Docx)                        | ⬜ Sin completar |
 | HU-06  | Eliminación de Cotizaciones (Solo Admin)         | ⬜ Sin completar |
+| HU-07  | Gestion de Servicios (CRUD)                      | ⬜ Sin completar |
+| HU-09  | Gestion de Productos por Servicio (CRUD)         | ⬜ Sin completar |
+| HU-10  | Listado de Servicios y Productos para Cotizar    | ⬜ Sin completar |
+| HU-11  | Guardar Cotizacion con Seleccion Completa        | ⬜ Sin completar |
+| HU-12  | Reutilizacion de Cotizacion desde Historial      | ⬜ Sin completar |

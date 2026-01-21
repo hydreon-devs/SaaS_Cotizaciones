@@ -179,7 +179,7 @@ Escenario: Editar o eliminar servicio
 
 ---
 
-### HU-09 - Gestion de Productos por Servicio (CRUD)
+### HU-08 - Gestion de Productos por Servicio (CRUD)
 
 **Descripcion:**  
 Los productos hacen parte de un servicio. El sistema debe permitir crear, listar, editar y eliminar productos asociados a un servicio especifico, persistiendo la relacion en Supabase.
@@ -204,10 +204,9 @@ Escenario: Editar o eliminar producto
   Entonces el cambio se refleja o se elimina en Supabase y la lista se actualiza
 ```
 
-
 ---
 
-### HU-10 - Listado de Servicios y Productos para Cotizar
+### HU-09 - Listado de Servicios y Productos para Cotizar
 
 **Descripcion:**  
 El sistema debe mostrar un listado de servicios con sus productos asociados para que el usuario pueda seleccionarlos al crear una cotizacion.
@@ -234,7 +233,7 @@ Escenario: Seleccionar productos para cotizar
 
 ---
 
-### HU-11 - Guardar Cotizacion con Seleccion Completa
+### HU-10 - Guardar Cotizacion con Seleccion Completa
 
 **Descripcion:**  
 El sistema debe permitir almacenar la cotizacion con todos los servicios y productos seleccionados, junto con la informacion del cliente, en Supabase.
@@ -261,7 +260,7 @@ Escenario: Confirmacion de guardado
 
 ---
 
-## HU-12 - Reutilizacion de Cotizacion desde Historial
+### HU-11 - Reutilizacion de Cotizacion desde Historial
 
 **Descripcion:**  
 El sistema debe permitir seleccionar una cotizacion del historial para ver su detalle y crear una nueva cotizacion a partir de ella, reutilizando los datos seleccionados.
@@ -288,18 +287,74 @@ Escenario: Crear nueva cotizacion desde historial
 
 ---
 
+### HU-12 - Envío de cotizaciones a clientes por correo
+
+**Descripción:**  
+El usuario después de crear la cotización podrá tener la posibilidad de enviar la cotización a los clientes vía email en formato de PDF. Esto facilita la gestión y entrega de las cotizaciones sin salir de la plataforma.
+
+#### Detalles Técnicos
+
+- Integración con servicio de correo (ej. SendGrid, Resend) mediante Supabase Edge Functions o API.
+- Generación del PDF (reutilizando lógica de HU-05) para adjuntar o enlazar en el correo.
+- Formulario modal para ingresar/confirmar el correo del destinatario.
+
+#### Criterios de Aceptación
+
+```gherkin
+Escenario: Enviar cotización por correo
+  Dado que la cotización está generada
+  Cuando el usuario selecciona "Enviar por correo" y confirma el destinatario
+  Entonces el sistema envía el email con el PDF adjunto y notifica éxito
+
+Escenario: Fallo en el envío
+  Dado que ocurre un error en el servicio de correo
+  Cuando el usuario intenta enviar
+  Entonces el sistema muestra un mensaje de error y no marca la cotización como enviada
+```
+
+---
+
+### HU-13 - Interfaz de métricas para administradores
+
+**Descripción:**  
+El usuario administrador tendrá habilitada una interfaz administrativa en la que podrá visualizar KPI’s relevantes como el total de cotizaciones, cantidad de cotizaciones por cliente, total de plantillas creadas, entre otros.
+
+#### Detalles Técnicos
+
+- Vista de Dashboard protegida por Rol (Solo Admin).
+- Consultas de agregación en Supabase (COUNTS, GROUP BY).
+- Visualización de datos mediante componentes de tarjetas y gráficos.
+
+#### Criterios de Aceptación
+
+```gherkin
+Escenario: Visualizar métricas Clave
+  Dado que el usuario es Administrador
+  Cuando accede a la sección de Métricas
+  Entonces visualiza contadores de total de cotizaciones, desglose por cliente y plantillas
+
+Escenario: Acceso denegado a no administradores
+  Dado que el usuario es Empleado
+  Cuando intenta ver las métricas
+  Entonces el sistema no muestra la opción o deniega el acceso
+```
+
+---
+
 ## Resumen de Tareas
 
-| Ticket | Descripción                                      | Estado         |
-|--------|--------------------------------------------------|----------------|
-| HU-01  | Autenticación y Gestión de Roles con Supabase    | ⬜ Sin completar |
-| HU-02  | Gestión de Plantillas (CRUD)                     | Completado     |
-| HU-03  | Visualización de Plantillas (Cards)              | Completado     |
-| HU-04  | Historial y Filtrado de Cotizaciones             | ⬜ Sin completar |
-| HU-05  | Exportación a Word (Docx)                        | ⬜ Sin completar |
-| HU-06  | Eliminación de Cotizaciones (Solo Admin)         | ⬜ Sin completar |
-| HU-07  | Gestion de Servicios (CRUD)                      | ⬜ Sin completar |
-| HU-09  | Gestion de Productos por Servicio (CRUD)         | ⬜ Sin completar |
-| HU-10  | Listado de Servicios y Productos para Cotizar    | ⬜ Sin completar |
-| HU-11  | Guardar Cotizacion con Seleccion Completa        | ⬜ Sin completar |
-| HU-12  | Reutilizacion de Cotizacion desde Historial      | ⬜ Sin completar |
+| Ticket | Descripción                                   | Estado           |
+| ------ | --------------------------------------------- | ---------------- |
+| HU-01  | Autenticación y Gestión de Roles con Supabase | ⬜ Sin completar |
+| HU-02  | Gestión de Plantillas (CRUD)                  | Completado       |
+| HU-03  | Visualización de Plantillas (Cards)           | Completado       |
+| HU-04  | Historial y Filtrado de Cotizaciones          | ⬜ Sin completar |
+| HU-05  | Exportación a Word (Docx)                     | ⬜ Sin completar |
+| HU-06  | Eliminación de Cotizaciones (Solo Admin)      | ⬜ Sin completar |
+| HU-07  | Gestion de Servicios (CRUD)                   | ⬜ Sin completar |
+| HU-08  | Gestion de Productos por Servicio (CRUD)      | ⬜ Sin completar |
+| HU-09  | Listado de Servicios y Productos para Cotizar | ⬜ Sin completar |
+| HU-10  | Guardar Cotizacion con Seleccion Completa     | ⬜ Sin completar |
+| HU-11  | Reutilizacion de Cotizacion desde Historial   | ⬜ Sin completar |
+| HU-12  | Envío de cotizaciones a clientes por correo   | ⬜ Sin completar |
+| HU-13  | Interfaz de métricas para administradores     | ⬜ Sin completar |

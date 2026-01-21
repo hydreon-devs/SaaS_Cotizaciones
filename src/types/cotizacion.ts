@@ -33,5 +33,7 @@ export interface PlantillaCotizacion {
   descripcion: string;
   icono: string;
   color: string;
+  autor: string; // Nombre del creador de la plantilla
+  fechaCreacion: string; // ISO string de fecha de creación
   datos: DatosCotizacion;
 }

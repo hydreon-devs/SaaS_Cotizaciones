@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Plus, Trash2, Download } from "lucide-react";
+import { Plus, Trash2, Download, Save } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import Header from "@/components/Header";
@@ -15,13 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatosCotizacion, Producto } from "@/types/cotizacion";
 import { serviciosMock } from "@/data/cotizaciones";
+import { PlantillasService } from "@/services/plantillasService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const NuevaCotizacion = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const plantillaData = location.state?.plantilla as DatosCotizacion | undefined;
   const vistaPreviaRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +62,9 @@ const NuevaCotizacion = () => {
   }, []);
 
   const [servicioSeleccionado, setServicioSeleccionado] = useState<string>("");
+  const [dialogPlantillaAbierto, setDialogPlantillaAbierto] = useState(false);
+  const [nombrePlantilla, setNombrePlantilla] = useState("");
+  const [descripcionPlantilla, setDescripcionPlantilla] = useState("");
 
   const handleInputChange = (field: keyof DatosCotizacion, value: string | number) => {
     setDatos((prev) => ({ ...prev, [field]: value }));
@@ -107,6 +122,40 @@ const NuevaCotizacion = () => {
       return;
     }
     toast.success("Cotización guardada exitosamente");
+  };
+
+  const handleAbrirDialogoPlantilla = () => {
+    if (datos.productos.length === 0) {
+      toast.error("Agrega al menos un producto antes de guardar como plantilla");
+      return;
+    }
+    setDialogPlantillaAbierto(true);
+  };
+
+  const handleGuardarComoPlantilla = () => {
+    if (!nombrePlantilla.trim()) {
+      toast.error("Ingresa un nombre para la plantilla");
+      return;
+    }
+
+    try {
+      PlantillasService.crear(
+        nombrePlantilla,
+        descripcionPlantilla,
+        datos,
+        user?.name || "Usuario", // Usar el nombre del usuario logueado
+        "FileText",
+        "bg-blue-500"
+      );
+
+      toast.success("Plantilla guardada exitosamente");
+      setDialogPlantillaAbierto(false);
+      setNombrePlantilla("");
+      setDescripcionPlantilla("");
+    } catch (error) {
+      toast.error("Error al guardar la plantilla");
+      console.error(error);
+    }
   };
 
   const handleDescargarPDF = async () => {
@@ -345,11 +394,56 @@ const NuevaCotizacion = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Descargar Cotización
               </Button>
+              <Button variant="secondary" onClick={handleAbrirDialogoPlantilla}>
+                <Save className="h-4 w-4 mr-2" />
+                Guardar como Plantilla
+              </Button>
               <Button onClick={handleGuardarCotizacion}>Guardar Cotización</Button>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Diálogo para guardar como plantilla */}
+      <Dialog open={dialogPlantillaAbierto} onOpenChange={setDialogPlantillaAbierto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Guardar como Plantilla</DialogTitle>
+            <DialogDescription>
+              Guarda esta configuración como plantilla para usarla en futuras cotizaciones.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="nombre-plantilla">
+                Nombre de la plantilla <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="nombre-plantilla"
+                placeholder="Ej: Evento Corporativo Estándar"
+                value={nombrePlantilla}
+                onChange={(e) => setNombrePlantilla(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descripcion-plantilla">Descripción (opcional)</Label>
+              <Textarea
+                id="descripcion-plantilla"
+                placeholder="Breve descripción de la plantilla..."
+                value={descripcionPlantilla}
+                onChange={(e) => setDescripcionPlantilla(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogPlantillaAbierto(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGuardarComoPlantilla}>Guardar Plantilla</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

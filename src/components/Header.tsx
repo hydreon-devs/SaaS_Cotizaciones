@@ -1,6 +1,6 @@
 import { FileText, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -76,8 +76,7 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 h-auto py-1.5 px-3 hover:bg-muted">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" />
-                  <AvatarFallback>{user ? getInitials(user.name) : "CM"}</AvatarFallback>
+                  <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-foreground">{user?.name || "Usuario"}</span>
               </Button>

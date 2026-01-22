@@ -153,8 +153,8 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
         {/* Signature */}
         <div className="flex items-center gap-3 pt-4 border-t border-border">
           <div className="text-xs">
-            <p className="font-medium text-foreground">{datos.nombreEncargado || "María Fernández"}</p>
-            <p className="text-muted-foreground">{datos.cargo || "Ejecutiva de Ventas"}</p>
+            <p className="font-medium text-foreground">{datos.nombreEncargado || "Carlos Jaramillo"}</p>
+            <p className="text-muted-foreground">{datos.cargo || "Director general"}</p>
             <p className="text-muted-foreground">carlos.jaramillo@cjproducciones.com</p>
           </div>
         </div>

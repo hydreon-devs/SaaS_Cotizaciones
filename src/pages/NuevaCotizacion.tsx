@@ -132,14 +132,14 @@ const NuevaCotizacion = () => {
     setDialogPlantillaAbierto(true);
   };
 
-  const handleGuardarComoPlantilla = () => {
+  const handleGuardarComoPlantilla = async () => {
     if (!nombrePlantilla.trim()) {
       toast.error("Ingresa un nombre para la plantilla");
       return;
     }
 
     try {
-      PlantillasService.crear(
+      await PlantillasService.crear(
         nombrePlantilla,
         descripcionPlantilla,
         datos,

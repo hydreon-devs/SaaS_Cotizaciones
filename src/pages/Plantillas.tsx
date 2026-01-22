@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check, Trash2, Edit, User } from "lucide-react";
+import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check, Trash2, Edit, User, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PlantillaCotizacion } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
 import { toast } from "sonner";
@@ -35,43 +28,32 @@ const iconMap: Record<string, React.ReactNode> = {
   FileText: <FileText className="h-8 w-8" />,
 };
 
-// Opciones de iconos y colores
-const iconOptions = [
-  { value: "Building2", label: "Edificio" },
-  { value: "Heart", label: "Corazón" },
-  { value: "Presentation", label: "Presentación" },
-  { value: "PartyPopper", label: "Fiesta" },
-  { value: "Rocket", label: "Cohete" },
-  { value: "FileText", label: "Archivo" },
-];
-
-const colorOptions = [
-  { value: "bg-blue-500", label: "Azul" },
-  { value: "bg-pink-500", label: "Rosa" },
-  { value: "bg-green-500", label: "Verde" },
-  { value: "bg-purple-500", label: "Púrpura" },
-  { value: "bg-orange-500", label: "Naranja" },
-  { value: "bg-gray-500", label: "Gris" },
-];
 
 const Plantillas = () => {
   const navigate = useNavigate();
   const [plantillas, setPlantillas] = useState<PlantillaCotizacion[]>([]);
+  const [cargando, setCargando] = useState(true);
   const [dialogEditarAbierto, setDialogEditarAbierto] = useState(false);
   const [plantillaEditando, setPlantillaEditando] = useState<PlantillaCotizacion | null>(null);
   const [nombreEditar, setNombreEditar] = useState("");
   const [descripcionEditar, setDescripcionEditar] = useState("");
-  const [iconoEditar, setIconoEditar] = useState("");
-  const [colorEditar, setColorEditar] = useState("");
 
-  // Cargar plantillas desde localStorage al montar el componente
+  // Cargar plantillas desde Supabase al montar el componente
   useEffect(() => {
     cargarPlantillas();
   }, []);
 
-  const cargarPlantillas = () => {
-    const plantillasGuardadas = PlantillasService.obtenerTodas();
-    setPlantillas(plantillasGuardadas);
+  const cargarPlantillas = async () => {
+    try {
+      setCargando(true);
+      const plantillasGuardadas = await PlantillasService.obtenerTodas();
+      setPlantillas(plantillasGuardadas);
+    } catch (error) {
+      toast.error("Error al cargar las plantillas");
+      console.error(error);
+    } finally {
+      setCargando(false);
+    }
   };
 
   const handleSeleccionarPlantilla = (plantilla: PlantillaCotizacion) => {
@@ -84,12 +66,10 @@ const Plantillas = () => {
     setPlantillaEditando(plantilla);
     setNombreEditar(plantilla.nombre);
     setDescripcionEditar(plantilla.descripcion);
-    setIconoEditar(plantilla.icono);
-    setColorEditar(plantilla.color);
     setDialogEditarAbierto(true);
   };
 
-  const handleGuardarEdicion = () => {
+  const handleGuardarEdicion = async () => {
     if (!plantillaEditando) return;
 
     if (!nombreEditar.trim()) {
@@ -98,14 +78,12 @@ const Plantillas = () => {
     }
 
     try {
-      PlantillasService.actualizar(plantillaEditando.id, {
+      await PlantillasService.actualizar(plantillaEditando.id, {
         nombre: nombreEditar,
         descripcion: descripcionEditar,
-        icono: iconoEditar,
-        color: colorEditar,
       });
 
-      cargarPlantillas();
+      await cargarPlantillas();
       setDialogEditarAbierto(false);
       toast.success("Plantilla actualizada correctamente");
     } catch (error) {
@@ -113,11 +91,11 @@ const Plantillas = () => {
     }
   };
 
-  const handleEliminarPlantilla = (id: string, e: React.MouseEvent) => {
+  const handleEliminarPlantilla = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      PlantillasService.eliminar(id);
-      cargarPlantillas();
+      await PlantillasService.eliminar(id);
+      await cargarPlantillas();
       toast.success("Plantilla eliminada correctamente");
     } catch (error) {
       toast.error("Error al eliminar la plantilla");
@@ -151,7 +129,12 @@ const Plantillas = () => {
           </p>
         </div>
 
-        {plantillas.length === 0 ? (
+        {cargando ? (
+          <div className="text-center py-12">
+            <Loader2 className="h-16 w-16 mx-auto text-muted-foreground mb-4 animate-spin" />
+            <p className="text-sm text-muted-foreground">Cargando plantillas...</p>
+          </div>
+        ) : plantillas.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
@@ -293,41 +276,6 @@ const Plantillas = () => {
                 placeholder="Descripción de la plantilla"
                 rows={3}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="icono-editar">Ícono</Label>
-                <Select value={iconoEditar} onValueChange={setIconoEditar}>
-                  <SelectTrigger id="icono-editar">
-                    <SelectValue placeholder="Selecciona un ícono" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {iconOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="color-editar">Color</Label>
-                <Select value={colorEditar} onValueChange={setColorEditar}>
-                  <SelectTrigger id="color-editar">
-                    <SelectValue placeholder="Selecciona un color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {colorOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded ${option.value}`} />
-                          {option.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
           <DialogFooter>

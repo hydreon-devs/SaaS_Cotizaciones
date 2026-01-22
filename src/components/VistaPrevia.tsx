@@ -49,34 +49,39 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
           </div>
           <div className="text-right">
             <h2 className="text-lg font-bold text-foreground">COTIZACIÓN</h2>
-            <p className="text-muted-foreground text-xs"># COT-2023-0458</p>
-            <p className="text-muted-foreground text-xs">Fecha: {formatDate(today)}</p>
-            <p className="text-muted-foreground text-xs">Válido hasta: {formatDate(validUntil)}</p>
+            <p className="text-muted-foreground text-xs">Fecha: {datos.fecha || formatDate(today)}</p>
           </div>
         </div>
 
         {/* Company Info */}
         <div className="mb-6 text-xs text-muted-foreground">
-          <p>Av. Providencia 1234, Santiago</p>
-          <p>contacto@cotizapro.cl</p>
-          <p>+56 2 2345 6789</p>
+          <p>Medellín, Colombia</p>
+          <p>cjproducciones@gmail.com</p>
+          <p>+57 312 2345 6789</p>
         </div>
 
-        {/* Client Info */}
-        <div className="mb-6">
-          <h4 className="font-semibold text-foreground mb-2">Cliente</h4>
-          <div className="text-xs text-muted-foreground space-y-0.5">
-            <p className="font-medium text-foreground">{datos.cliente || "Nombre del cliente"}</p>
-            <p>RUT: 76.543.210-K</p>
-            <p>Av. Las Condes 9876, Las Condes, Santiago</p>
-            <p>contacto@tecinnova.cl</p>
-            <p>+56 9 8765 4321</p>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Client Info */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-2">Cliente</h4>
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p className="font-medium text-foreground">{datos.cliente || "Nombre del cliente"}</p>
+            </div>
+          </div>
+
+          {/* Event Info */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-2">Evento</h4>
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p className="font-medium text-foreground">{datos.evento || "Nombre del evento"}</p>
+            </div>
           </div>
         </div>
+        <div className="border-b border-border mb-6" />
 
         {/* Detail Table */}
         <div className="mb-6">
-          <h4 className="font-semibold text-foreground mb-2">Detalle</h4>
+          <h4 className="font-semibold text-foreground mb-2">Detalles de los servicios y productos</h4>
           <div className="border border-border rounded overflow-hidden">
             <table className="w-full text-xs">
               <thead className="bg-muted/50">
@@ -145,25 +150,12 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
           </div>
         )}
 
-        {/* Default considerations */}
-        <div className="mb-6 text-xs text-muted-foreground space-y-1">
-          <p>- Forma de pago: 50% al inicio del proyecto, 50% contra entrega.</p>
-          <p>- Tiempo de entrega: 45 días hábiles desde la aprobación de la cotización.</p>
-          <p>- El mantenimiento mensual incluye 5 horas de soporte técnico.</p>
-          <p>- Los precios no incluyen gastos de traslado fuera de Santiago.</p>
-        </div>
-
         {/* Signature */}
         <div className="flex items-center gap-3 pt-4 border-t border-border">
-          <img
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=face"
-            alt="Ejecutivo"
-            className="w-12 h-12 rounded-full object-cover"
-          />
           <div className="text-xs">
             <p className="font-medium text-foreground">{datos.nombreEncargado || "María Fernández"}</p>
             <p className="text-muted-foreground">{datos.cargo || "Ejecutiva de Ventas"}</p>
-            <p className="text-muted-foreground">maria.fernandez@cotizapro.cl</p>
+            <p className="text-muted-foreground">carlos.jaramillo@cjproducciones.com</p>
           </div>
         </div>
       </div>

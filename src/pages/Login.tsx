@@ -131,33 +131,6 @@ const Login = () => {
               )}
             </Button>
           </form>
-
-          <div className="relative animate-in fade-in duration-500 delay-700">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Prueba la demo
-              </span>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500 delay-800 hover:bg-primary/5 transition-all duration-300"
-            onClick={fillTestCredentials}
-            disabled={isLoading}
-          >
-            Cargar credenciales de prueba
-          </Button>
-
-          <div className="text-center text-xs text-muted-foreground pt-4 animate-in fade-in duration-500 delay-900 space-y-1">
-            <p className="font-medium">Credenciales de prueba:</p>
-            <p className="font-mono">admin@cotizaciones.cl</p>
-            <p className="font-mono">admin123</p>
-          </div>
         </CardContent>
       </Card>
     </div>

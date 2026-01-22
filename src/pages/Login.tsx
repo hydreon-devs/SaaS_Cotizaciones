@@ -41,12 +41,6 @@ const Login = () => {
     }
   };
 
-  const fillTestCredentials = () => {
-    setEmail("admin@cotizaciones.cl");
-    setPassword("admin123");
-    toast.info("Credenciales de prueba cargadas");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
       {/* Elementos decorativos de fondo */}

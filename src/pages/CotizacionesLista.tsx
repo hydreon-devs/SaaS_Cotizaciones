@@ -66,11 +66,24 @@ const CotizacionesLista = () => {
     };
   }, []);
 
-  // Convierte fecha dd/mm/yyyy a Date para comparación
-  const parseFecha = (fechaStr: string): Date | null => {
-    const parts = fechaStr.split("/");
+  // Convierte fecha dd/mm/yyyy o dd-mm-yyyy a Date para comparación
+  const parseFechaCotizacion = (fechaStr: string): Date | null => {
+    if (!fechaStr) return null;
+    // Acepta tanto "/" como "-" como separadores (formato dd/mm/yyyy o dd-mm-yyyy)
+    const parts = fechaStr.split(/[/-]/);
     if (parts.length !== 3) return null;
     const [day, month, year] = parts.map(Number);
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  // Convierte fecha del input date (yyyy-mm-dd) a Date local
+  const parseFechaInput = (fechaStr: string): Date | null => {
+    if (!fechaStr) return null;
+    const parts = fechaStr.split("-");
+    if (parts.length !== 3) return null;
+    const [year, month, day] = parts.map(Number);
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
     return new Date(year, month - 1, day);
   };
 
@@ -80,16 +93,18 @@ const CotizacionesLista = () => {
       if (clienteFilter !== "todos" && cot.cliente !== clienteFilter) return false;
 
       // Filtro por rango de fechas
-      const cotFecha = parseFecha(cot.fecha);
+      const cotFecha = parseFechaCotizacion(cot.fecha);
       if (cotFecha) {
         if (fechaDesde) {
-          const desde = new Date(fechaDesde);
-          if (cotFecha < desde) return false;
+          const desde = parseFechaInput(fechaDesde);
+          if (desde && cotFecha < desde) return false;
         }
         if (fechaHasta) {
-          const hasta = new Date(fechaHasta);
-          hasta.setHours(23, 59, 59, 999);
-          if (cotFecha > hasta) return false;
+          const hasta = parseFechaInput(fechaHasta);
+          if (hasta) {
+            hasta.setHours(23, 59, 59, 999);
+            if (cotFecha > hasta) return false;
+          }
         }
       }
 

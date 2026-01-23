@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,69 +19,105 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cotizacion, EstadoCotizacion } from "@/types/cotizacion";
-import { obtenerCotizaciones } from "@/services/cotizacionesService";
+import { CotizacionesService } from "@/services/cotizacionesService";
+import { Cotizacion } from "@/types/cotizacion";
+import { toast } from "sonner";
+import { Loader2, FileText } from "lucide-react";
 
 const CotizacionesLista = () => {
   const navigate = useNavigate();
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  const [clientes, setClientes] = useState<string[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [clienteFilter, setClienteFilter] = useState("");
-  const [fechaDesde, setFechaDesde] = useState("01/01/2023");
-  const [fechaHasta, setFechaHasta] = useState("31/12/2023");
-  const [estadoFilter, setEstadoFilter] = useState<EstadoCotizacion | "todos">("todos");
+  const [clienteFilter, setClienteFilter] = useState<string>("todos");
+  const [fechaDesde, setFechaDesde] = useState<string>("");
+  const [fechaHasta, setFechaHasta] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
+  // Cargar cotizaciones y clientes al montar el componente
   useEffect(() => {
     let activo = true;
 
-    const cargarCotizaciones = async () => {
-      setCargando(true);
-      setError(null);
+    const cargarDatos = async () => {
       try {
-        const data = await obtenerCotizaciones();
+        setCargando(true);
+        const [cotizacionesData, clientesData] = await Promise.all([
+          CotizacionesService.obtenerTodas(),
+          CotizacionesService.obtenerClientes(),
+        ]);
         if (!activo) return;
-        setCotizaciones(data);
-      } catch (errorCarga) {
+        setCotizaciones(cotizacionesData);
+        setClientes(clientesData);
+      } catch (error) {
         if (!activo) return;
-        console.error(errorCarga);
-        setError("No se pudieron cargar las cotizaciones");
+        toast.error("Error al cargar las cotizaciones");
+        console.error(error);
       } finally {
         if (activo) setCargando(false);
       }
     };
 
-    cargarCotizaciones();
+    cargarDatos();
 
     return () => {
       activo = false;
     };
   }, []);
 
-  const clientesDisponibles = useMemo(() => {
-    const clientes = cotizaciones
-      .map((cot) => cot.cliente)
-      .filter((cliente) => Boolean(cliente));
-    return Array.from(new Set(clientes)).sort((a, b) => a.localeCompare(b));
-  }, [cotizaciones]);
+  // Convierte fecha dd/mm/yyyy o dd-mm-yyyy a Date para comparación
+  const parseFechaCotizacion = (fechaStr: string): Date | null => {
+    if (!fechaStr) return null;
+    // Acepta tanto "/" como "-" como separadores (formato dd/mm/yyyy o dd-mm-yyyy)
+    const parts = fechaStr.split(/[/-]/);
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts.map(Number);
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  // Convierte fecha del input date (yyyy-mm-dd) a Date local
+  const parseFechaInput = (fechaStr: string): Date | null => {
+    if (!fechaStr) return null;
+    const parts = fechaStr.split("-");
+    if (parts.length !== 3) return null;
+    const [year, month, day] = parts.map(Number);
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    return new Date(year, month - 1, day);
+  };
 
   const filteredData = useMemo(() => {
     return cotizaciones.filter((cot) => {
-      if (estadoFilter !== "todos" && cot.estado !== estadoFilter) return false;
-      if (clienteFilter && !cot.cliente.toLowerCase().includes(clienteFilter.toLowerCase()))
-        return false;
+      // Filtro por cliente
+      if (clienteFilter !== "todos" && cot.cliente !== clienteFilter) return false;
+
+      // Filtro por rango de fechas
+      const cotFecha = parseFechaCotizacion(cot.fecha);
+      if (cotFecha) {
+        if (fechaDesde) {
+          const desde = parseFechaInput(fechaDesde);
+          if (desde && cotFecha < desde) return false;
+        }
+        if (fechaHasta) {
+          const hasta = parseFechaInput(fechaHasta);
+          if (hasta) {
+            hasta.setHours(23, 59, 59, 999);
+            if (cotFecha > hasta) return false;
+          }
+        }
+      }
+
       return true;
     });
-  }, [cotizaciones, estadoFilter, clienteFilter]);
+  }, [cotizaciones, clienteFilter, fechaDesde, fechaHasta]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-
+  // Resetear página cuando cambian los filtros
   useEffect(() => {
     setCurrentPage(1);
-  }, [clienteFilter, estadoFilter, cotizaciones.length]);
+  }, [clienteFilter, fechaDesde, fechaHasta]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -93,16 +128,29 @@ const CotizacionesLista = () => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
       currency: "CLP",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const handleLimpiarFiltros = () => {
-    setClienteFilter("");
-    setFechaDesde("01/01/2023");
-    setFechaHasta("31/12/2023");
-    setEstadoFilter("todos");
+    setClienteFilter("todos");
+    setFechaDesde("");
+    setFechaHasta("");
     setCurrentPage(1);
+  };
+
+  const handleSeleccionarCotizacion = async (cotizacion: Cotizacion) => {
+    try {
+      const datos = await CotizacionesService.obtenerPorId(Number(cotizacion.id));
+      if (datos) {
+        navigate("/nueva", { state: { plantilla: datos } });
+      } else {
+        toast.error("No se pudo cargar la cotización");
+      }
+    } catch (error) {
+      toast.error("Error al cargar la cotización");
+      console.error(error);
+    }
   };
 
   return (
@@ -130,18 +178,18 @@ const CotizacionesLista = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Cliente</label>
-                  <Select value={clienteFilter || "todos"} onValueChange={(v) => setClienteFilter(v === "todos" ? "" : v)}>
+                  <Select value={clienteFilter} onValueChange={setClienteFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los clientes" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todos">Todos los clientes</SelectItem>
-                      {clientesDisponibles.length === 0 ? (
+                      {clientes.length === 0 ? (
                         <SelectItem value="sin-clientes" disabled>
                           No hay clientes disponibles
                         </SelectItem>
                       ) : (
-                        clientesDisponibles.map((cliente) => (
+                        clientes.map((cliente) => (
                           <SelectItem key={cliente} value={cliente}>
                             {cliente}
                           </SelectItem>
@@ -153,156 +201,133 @@ const CotizacionesLista = () => {
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Fecha desde</label>
                   <Input
-                    type="text"
+                    type="date"
                     value={fechaDesde}
                     onChange={(e) => setFechaDesde(e.target.value)}
-                    className="bg-primary/5 border-primary/20"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Fecha hasta</label>
                   <Input
-                    type="text"
+                    type="date"
                     value={fechaHasta}
                     onChange={(e) => setFechaHasta(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Estado</label>
-                  <Select value={estadoFilter} onValueChange={setEstadoFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos</SelectItem>
-                      <SelectItem value="aprobada">Aprobada</SelectItem>
-                      <SelectItem value="pendiente">Pendiente</SelectItem>
-                      <SelectItem value="rechazada">Rechazada</SelectItem>
-                      <SelectItem value="expirada">Expirada</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-end">
+                  <Button variant="outline" onClick={handleLimpiarFiltros} className="w-full">
+                    Limpiar filtros
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleLimpiarFiltros}>
-                  Limpiar filtros
-                </Button>
-                <Button>Buscar</Button>
               </div>
             </div>
 
-            {/* Resultados */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {cargando ? "Cargando..." : `Resultados (${filteredData.length})`}
-                </span>
-                <Select defaultValue="reciente">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Ordenar por" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="reciente">Fecha (más reciente)</SelectItem>
-                    <SelectItem value="antiguo">Fecha (más antiguo)</SelectItem>
-                    <SelectItem value="monto">Monto</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Contenido */}
+            {cargando ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-16 w-16 mx-auto text-muted-foreground mb-4 animate-spin" />
+                <p className="text-sm text-muted-foreground">Cargando cotizaciones...</p>
               </div>
-
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead>N° Cotización</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead className="text-right">Monto Total</TableHead>
-                      <TableHead className="text-center">Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cargando ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground">
-                          Cargando cotizaciones...
-                        </TableCell>
-                      </TableRow>
-                    ) : error ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-destructive">
-                          {error}
-                        </TableCell>
-                      </TableRow>
-                    ) : paginatedData.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground">
-                          No hay cotizaciones para mostrar
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      paginatedData.map((cotizacion) => (
-                        <TableRow
-                          key={cotizacion.id}
-                          className="hover:bg-muted/30 cursor-pointer"
-                          onClick={() => navigate(`/cotizaciones/${cotizacion.id}`)}
-                        >
-                          <TableCell className="font-medium text-primary">
-                            {cotizacion.numero}
-                          </TableCell>
-                          <TableCell>{cotizacion.cliente}</TableCell>
-                          <TableCell>{cotizacion.fecha}</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(cotizacion.montoTotal)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <StatusBadge status={cotizacion.estado} />
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+            ) : cotizaciones.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">
+                  No hay cotizaciones guardadas
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Crea tu primera cotización para comenzar
+                </p>
+                <Button onClick={() => navigate("/nueva")}>
+                  Crear Nueva Cotización
+                </Button>
               </div>
-
-              {/* Paginación */}
-              {filteredData.length > 0 && !cargando && (
+            ) : (
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    Mostrando {(currentPage - 1) * itemsPerPage + 1}-
-                    {Math.min(currentPage * itemsPerPage, filteredData.length)} de{" "}
-                    {filteredData.length} resultados
+                    Resultados ({filteredData.length})
                   </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                    >
-                      «
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                    >
-                      »
-                    </Button>
-                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead>N° Cotización</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead className="text-right">Monto Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground">
+                            No hay cotizaciones que coincidan con los filtros
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedData.map((cotizacion) => (
+                          <TableRow
+                            key={cotizacion.id}
+                            className="hover:bg-muted/30 cursor-pointer"
+                            onClick={() => handleSeleccionarCotizacion(cotizacion)}
+                          >
+                            <TableCell className="font-medium text-primary">
+                              {cotizacion.numero}
+                            </TableCell>
+                            <TableCell>{cotizacion.cliente}</TableCell>
+                            <TableCell>{cotizacion.fecha}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(cotizacion.montoTotal)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Paginación */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+                      {Math.min(currentPage * itemsPerPage, filteredData.length)} de{" "}
+                      {filteredData.length} resultados
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                      >
+                        «
+                      </Button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        »
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>

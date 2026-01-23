@@ -2,10 +2,13 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { signIn } from "../api/auth/singin";
 import { getSession } from "../api/auth/getSession";
 import { singout } from "../api/auth/singout";
+import { getRole } from "../api/auth/getRole";
+import { supabase } from "../api/conection";
 interface User {
   token: string;
   email: string;
   name: string;
+  role: string;
 }
 
 interface AuthContextType {
@@ -29,9 +32,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        setTimeout(() => resolve(fallback), ms);
+      }),
+    ]);
+  };
+
+  const fetchRole = async (): Promise<string> => {
+    try {
+      const { data, error } = await withTimeout(getRole(), 3000, { data: "", error: null });
+      if (error) return "";
+      if (typeof data === "string") return data;
+      return "";
+    } catch {
+      return "";
+    }
+  };
+
   const logout = async () => {
     setUser(null);
-    await singout();
+    await withTimeout(singout(), 3000, { error: null });
   };
 
   // Cargar sesión desde localStorage al montar
@@ -48,10 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.session) {
         const sessionUser = data.session.user;
+        const role = await fetchRole();
         const userData = {
           token: data.session.access_token,
           email: sessionUser.email ?? "",
           name: sessionUser.user_metadata?.name ?? "",
+          role,
         };
 
         setUser(userData);
@@ -64,6 +89,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        return;
+      }
+
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+        const sessionUser = session.user;
+        const role = await fetchRole();
+
+        setUser({
+          token: session.access_token,
+          email: sessionUser.email ?? "",
+          name: sessionUser.user_metadata?.name ?? "",
+          role,
+        });
+      }
+    });
+
+    return () => {
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simular delay de API
     // await new Promise((resolve) => setTimeout(resolve, 800));
@@ -74,10 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     console.log(data);
 
+    const role = await fetchRole();
     const userData = {
       token: data.session?.access_token ?? "",
       email: data.user?.email ?? "",
       name: data.user?.user_metadata?.name ?? "",
+      role,
     };
 
     setUser(userData);

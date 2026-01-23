@@ -18,3 +18,23 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   return <>{children}</>;
 }
+
+interface AdminRouteProps {
+    children: React.ReactNode;
+}
+
+export const AdminRoute = ({ children }: AdminRouteProps) => {
+    const { user,isLoading, isAuthenticated } = useAuth();
+    if (isLoading) {
+        return null;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" />;
+    }
+
+    if (user?.role !== "admin") {
+        return <Navigate to="/" />;
+    }
+    return <>{children}</>;
+}

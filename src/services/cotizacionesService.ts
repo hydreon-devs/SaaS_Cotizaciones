@@ -1,21 +1,27 @@
-import { supabase } from "@/api/conection";
 import { Cotizacion, DatosCotizacion, EstadoCotizacion, Producto } from "@/types/cotizacion";
+import { supabase } from "@/api/conection";
 
 type CotizacionDB = {
-  id?: string | number | null;
+  id: number;
   numero?: string | null;
   codigo?: string | null;
   cliente?: string | null;
   nombre_cliente?: string | null;
   fecha?: string | null;
   fecha_emision?: string | null;
-  created_at?: string | null;
+  created_at: string;
+  updated_at?: string;
   monto_total?: number | string | null;
   montoTotal?: number | string | null;
   total?: number | string | null;
   monto?: number | string | null;
   estado?: string | null;
   status?: string | null;
+  evento?: string | null;
+  descuento?: number | string | null;
+  user_id?: string | null;
+  cuerpo?: CotizacionCuerpoDB[];
+  consideraciones?: CotizacionConsideracionDB[];
 };
 
 type CotizacionCuerpoDB = {
@@ -81,6 +87,10 @@ const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 };
 
+const generateNumero = (id: number): string => {
+  return `COT-${id.toString().padStart(5, '0')}`;
+};
+
 const parseProductoId = (producto: Producto): number | null => {
   if (typeof producto.productoId === "number") return producto.productoId;
   const parsed = Number(producto.id);
@@ -96,6 +106,58 @@ const calcularTotal = (productos: Producto[], descuento: number) => {
   return { subtotal, total };
 };
 
+/**
+ * Convierte la estructura de BD al formato de lista para la aplicación
+ */
+const toAppFormat = (cotizacion: CotizacionDB): Cotizacion => {
+  const idBase = cotizacion.id ?? cotizacion.created_at;
+  return {
+    id: String(idBase),
+    numero: cotizacion.numero ?? cotizacion.codigo ?? generateNumero(cotizacion.id),
+    cliente: cotizacion.cliente ?? cotizacion.nombre_cliente ?? "Sin cliente",
+    fecha: formatFecha(cotizacion.fecha ?? cotizacion.fecha_emision ?? cotizacion.created_at ?? ""),
+    montoTotal: toNumber(cotizacion.monto_total ?? cotizacion.montoTotal ?? cotizacion.total ?? cotizacion.monto ?? 0),
+    estado: normalizeEstado(cotizacion.estado ?? cotizacion.status),
+  };
+};
+
+/**
+ * Convierte una cotización completa de BD al formato DatosCotizacion para precargar
+ */
+const toDatosCotizacion = (cotizacionDB: CotizacionDB): DatosCotizacion => {
+  // Convertir el cuerpo de la cotización a productos
+  const productos: Producto[] = (cotizacionDB.cuerpo || []).map((item) => ({
+    id: item.id,
+    descripcion: item.nombre_producto || item.descripcion_producto || '',
+    cantidad: toNumber(item.cantidad) || 1,
+    precioUnitario: toNumber(item.precio_unitario) || 0,
+    productoId: item.producto_id,
+    servicioId: item.servicio_id,
+    nombreServicio: item.nombre_servicio,
+    descripcionProducto: item.descripcion_producto,
+  }));
+
+  // Concatenar las consideraciones ordenadas
+  const consideraciones = (cotizacionDB.consideraciones || [])
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+    .map((c) => c.texto)
+    .join('\n');
+
+  return {
+    cliente: cotizacionDB.nombre_cliente || cotizacionDB.cliente || '',
+    evento: cotizacionDB.evento || '',
+    consideraciones,
+    descuento: toNumber(cotizacionDB.descuento) || 0,
+    fecha: cotizacionDB.fecha || '',
+    nombreEncargado: '',
+    cargo: '',
+    productos,
+  };
+};
+
+/**
+ * Obtiene todas las cotizaciones
+ */
 export const obtenerCotizaciones = async (): Promise<Cotizacion[]> => {
   const { data, error } = await supabase
     .from("cotizaciones")
@@ -107,21 +169,12 @@ export const obtenerCotizaciones = async (): Promise<Cotizacion[]> => {
     throw new Error("No se pudieron obtener las cotizaciones");
   }
 
-  return (data ?? []).map((cotizacion, index) => {
-    const item = cotizacion as CotizacionDB;
-    const idBase = item.id ?? item.numero ?? item.created_at ?? index;
-
-    return {
-      id: String(idBase),
-      numero: item.numero ?? item.codigo ?? String(item.id ?? idBase),
-      cliente: item.cliente ?? item.nombre_cliente ?? "Sin cliente",
-      fecha: formatFecha(item.fecha ?? item.fecha_emision ?? item.created_at ?? ""),
-      montoTotal: toNumber(item.monto_total ?? item.montoTotal ?? item.total ?? item.monto ?? 0),
-      estado: normalizeEstado(item.estado ?? item.status),
-    };
-  });
+  return (data ?? []).map((cotizacion) => toAppFormat(cotizacion as CotizacionDB));
 };
 
+/**
+ * Obtiene el detalle completo de una cotización
+ */
 export const obtenerCotizacionDetalle = async (
   id: number | string
 ): Promise<CotizacionDetalle> => {
@@ -170,6 +223,9 @@ export const obtenerCotizacionDetalle = async (
   };
 };
 
+/**
+ * Crea una nueva cotización
+ */
 export const crearCotizacion = async (
   datos: DatosCotizacion,
   productos: Producto[]
@@ -252,3 +308,64 @@ export const crearCotizacion = async (
 
   return cotizacionId;
 };
+
+/**
+ * Servicio para gestionar cotizaciones en Supabase
+ * Clase con métodos estáticos para uso en componentes
+ */
+export class CotizacionesService {
+  /**
+   * Obtiene todas las cotizaciones (visibles para todos los usuarios)
+   */
+  static async obtenerTodas(): Promise<Cotizacion[]> {
+    return obtenerCotizaciones();
+  }
+
+  /**
+   * Obtiene una cotización por su ID con todos sus detalles para precargar
+   */
+  static async obtenerPorId(id: number): Promise<DatosCotizacion | null> {
+    const { data: cotizacion, error } = await supabase
+      .from('cotizaciones')
+      .select(`
+        *,
+        cuerpo:cotizacion_cuerpo (*),
+        consideraciones:cotizacion_consideraciones (*)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.error('Error al obtener cotización:', error);
+      throw new Error('No se pudo obtener la cotización');
+    }
+
+    return toDatosCotizacion(cotizacion as CotizacionDB);
+  }
+
+  /**
+   * Obtiene los clientes únicos de las cotizaciones para los filtros
+   */
+  static async obtenerClientes(): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('cotizaciones')
+      .select('nombre_cliente')
+      .not('nombre_cliente', 'is', null);
+
+    if (error) {
+      console.error('Error al obtener clientes:', error);
+      return [];
+    }
+
+    const clientesUnicos = [...new Set(
+      (data || [])
+        .map((c) => c.nombre_cliente)
+        .filter((c): c is string => c !== null && c.trim() !== '')
+    )];
+
+    return clientesUnicos;
+  }
+}

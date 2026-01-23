@@ -9,11 +9,35 @@ export interface Cotizacion {
   estado: EstadoCotizacion;
 }
 
+export interface Servicio {
+  id: number;
+  nombre: string | null;
+  descripcion: string | null;
+  estado: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Producto {
   id: string;
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
+  productoId?: number | null;
+  servicioId?: number | null;
+  nombreServicio?: string | null;
+  descripcionProducto?: string | null;
+}
+
+export interface ProductoServicio {
+  id: number;
+  id_servicio: number;
+  nombre: string | null;
+  descripcion: string | null;
+  precio: number | null;
+  estado: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DatosCotizacion {

@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { Plus, Trash2, Download, Save } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import Header from "@/components/Header";
 import VistaPrevia from "@/components/VistaPrevia";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -345,9 +344,7 @@ const NuevaCotizacion = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="p-6">
+    <div>
         <div className="mb-6">
           <h1 className="text-xl font-semibold text-foreground">Generador de cotizaciones</h1>
           <p className="text-sm text-muted-foreground">
@@ -606,7 +603,6 @@ const NuevaCotizacion = () => {
             </div>
           </div>
         </div>
-      </main>
 
       {/* Diálogo para guardar como plantilla */}
       <Dialog open={dialogPlantillaAbierto} onOpenChange={setDialogPlantillaAbierto}>

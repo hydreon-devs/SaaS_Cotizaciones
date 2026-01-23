@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check, Trash2, Edit, User, Loader2 } from "lucide-react";
-import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,15 +118,13 @@ const Plantillas = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="p-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-foreground">Plantillas de Cotización</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Selecciona una plantilla para comenzar rápidamente con tu cotización
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-foreground">Plantillas de Cotización</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Selecciona una plantilla para comenzar rápidamente con tu cotización
+        </p>
+      </div>
 
         {cargando ? (
           <div className="text-center py-12">
@@ -243,8 +240,7 @@ const Plantillas = () => {
             </Card>
           ))}
         </div>
-        )}
-      </main>
+      )}
 
       {/* Diálogo para editar plantilla */}
       <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>

@@ -77,17 +77,25 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 h-auto py-1.5 px-3 hover:bg-muted">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
+                  <AvatarFallback>{user ? getInitials(user.email) : "U"}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-foreground">{user?.name || "Usuario"}</span>
+                <span className="text-sm text-foreground">{user?.email || "Usuario"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-muted-foreground">
-                {user?.email || "email@ejemplo.com"}
+                <Link to="/profile">
+                  {user?.email || "email@ejemplo.com"}
+                </Link>
               </DropdownMenuItem>
+              
+              {user?.role === "admin" && <DropdownMenuItem className="text-muted-foreground">
+                <Link to="/admin-panel">
+                  Panel de administración
+                </Link>
+              </DropdownMenuItem>}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

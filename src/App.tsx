@@ -5,12 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import NuevaCotizacion from "./pages/NuevaCotizacion";
 import Plantillas from "./pages/Plantillas";
 import NotFound from "./pages/NotFound";
+import AdminPanel from "./pages/admin-panel";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,14 @@ const App = () => (
                   <ProtectedRoute>
                     <Plantillas />
                   </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="admin-panel"
+                element= {
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
                 }
               />
               <Route path="*" element={<NotFound />} />

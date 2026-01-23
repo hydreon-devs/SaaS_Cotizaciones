@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -20,24 +20,69 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cotizacionesMock } from "@/data/cotizaciones";
-import { EstadoCotizacion } from "@/types/cotizacion";
+import { Cotizacion, EstadoCotizacion } from "@/types/cotizacion";
+import { obtenerCotizaciones } from "@/services/cotizacionesService";
 
 const CotizacionesLista = () => {
+  const navigate = useNavigate();
+  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [clienteFilter, setClienteFilter] = useState("");
   const [fechaDesde, setFechaDesde] = useState("01/01/2023");
   const [fechaHasta, setFechaHasta] = useState("31/12/2023");
-  const [estadoFilter, setEstadoFilter] = useState<string>("todos");
+  const [estadoFilter, setEstadoFilter] = useState<EstadoCotizacion | "todos">("todos");
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(cotizacionesMock.length / itemsPerPage);
 
-  const filteredData = cotizacionesMock.filter((cot) => {
-    if (estadoFilter !== "todos" && cot.estado !== estadoFilter) return false;
-    if (clienteFilter && !cot.cliente.toLowerCase().includes(clienteFilter.toLowerCase())) return false;
-    return true;
-  });
+  useEffect(() => {
+    let activo = true;
+
+    const cargarCotizaciones = async () => {
+      setCargando(true);
+      setError(null);
+      try {
+        const data = await obtenerCotizaciones();
+        if (!activo) return;
+        setCotizaciones(data);
+      } catch (errorCarga) {
+        if (!activo) return;
+        console.error(errorCarga);
+        setError("No se pudieron cargar las cotizaciones");
+      } finally {
+        if (activo) setCargando(false);
+      }
+    };
+
+    cargarCotizaciones();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  const clientesDisponibles = useMemo(() => {
+    const clientes = cotizaciones
+      .map((cot) => cot.cliente)
+      .filter((cliente) => Boolean(cliente));
+    return Array.from(new Set(clientes)).sort((a, b) => a.localeCompare(b));
+  }, [cotizaciones]);
+
+  const filteredData = useMemo(() => {
+    return cotizaciones.filter((cot) => {
+      if (estadoFilter !== "todos" && cot.estado !== estadoFilter) return false;
+      if (clienteFilter && !cot.cliente.toLowerCase().includes(clienteFilter.toLowerCase()))
+        return false;
+      return true;
+    });
+  }, [cotizaciones, estadoFilter, clienteFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [clienteFilter, estadoFilter, cotizaciones.length]);
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -91,9 +136,17 @@ const CotizacionesLista = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todos">Todos los clientes</SelectItem>
-                      <SelectItem value="Grupo Empresarial XYZ">Grupo Empresarial XYZ</SelectItem>
-                      <SelectItem value="Constructora Edificar S.A.">Constructora Edificar S.A.</SelectItem>
-                      <SelectItem value="Comercial Monterrey">Comercial Monterrey</SelectItem>
+                      {clientesDisponibles.length === 0 ? (
+                        <SelectItem value="sin-clientes" disabled>
+                          No hay clientes disponibles
+                        </SelectItem>
+                      ) : (
+                        clientesDisponibles.map((cliente) => (
+                          <SelectItem key={cliente} value={cliente}>
+                            {cliente}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -142,7 +195,7 @@ const CotizacionesLista = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Resultados ({filteredData.length})
+                  {cargando ? "Cargando..." : `Resultados (${filteredData.length})`}
                 </span>
                 <Select defaultValue="reciente">
                   <SelectTrigger className="w-[180px]">
@@ -168,61 +221,87 @@ const CotizacionesLista = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((cotizacion) => (
-                      <TableRow key={cotizacion.id} className="hover:bg-muted/30">
-                        <TableCell className="font-medium text-primary">
-                          {cotizacion.numero}
-                        </TableCell>
-                        <TableCell>{cotizacion.cliente}</TableCell>
-                        <TableCell>{cotizacion.fecha}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(cotizacion.montoTotal)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <StatusBadge status={cotizacion.estado} />
+                    {cargando ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          Cargando cotizaciones...
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : error ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-destructive">
+                          {error}
+                        </TableCell>
+                      </TableRow>
+                    ) : paginatedData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          No hay cotizaciones para mostrar
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedData.map((cotizacion) => (
+                        <TableRow
+                          key={cotizacion.id}
+                          className="hover:bg-muted/30 cursor-pointer"
+                          onClick={() => navigate(`/cotizaciones/${cotizacion.id}`)}
+                        >
+                          <TableCell className="font-medium text-primary">
+                            {cotizacion.numero}
+                          </TableCell>
+                          <TableCell>{cotizacion.cliente}</TableCell>
+                          <TableCell>{cotizacion.fecha}</TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(cotizacion.montoTotal)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <StatusBadge status={cotizacion.estado} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Paginación */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Mostrando {(currentPage - 1) * itemsPerPage + 1}-
-                  {Math.min(currentPage * itemsPerPage, filteredData.length)} de{" "}
-                  {filteredData.length} resultados
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                  >
-                    «
-                  </Button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {filteredData.length > 0 && !cargando && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+                    {Math.min(currentPage * itemsPerPage, filteredData.length)} de{" "}
+                    {filteredData.length} resultados
+                  </span>
+                  <div className="flex items-center gap-1">
                     <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(page)}
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
                     >
-                      {page}
+                      «
                     </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    »
-                  </Button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      »
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

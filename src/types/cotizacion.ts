@@ -87,3 +87,52 @@ export interface PlantillaDB {
   updated_at: string;
   servicios?: PlantillaServicioDB[];
 }
+
+// ==========================================
+// Tipos para cotizaciones en BD
+// ==========================================
+
+/**
+ * Producto/ítem dentro del cuerpo de una cotización (tabla: cotizacion_cuerpo)
+ */
+export interface CotizacionCuerpoDB {
+  id: string;
+  cotizacion_id: number;
+  servicio_id: number | null;
+  producto_id: number | null;
+  nombre_servicio: string;
+  nombre_producto: string;
+  descripcion_producto: string | null;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  created_at: string;
+}
+
+/**
+ * Consideración de una cotización (tabla: cotizacion_consideraciones)
+ */
+export interface CotizacionConsideracionDB {
+  id: number;
+  cotizacion_id: number;
+  texto: string;
+  orden: number | null;
+  created_at: string;
+}
+
+/**
+ * Cotización principal (tabla: cotizaciones)
+ */
+export interface CotizacionDB {
+  id: number;
+  nombre_cliente: string | null;
+  evento: string | null;
+  descuento: number | null;
+  fecha: string | null;
+  total: number | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string | null;
+  cuerpo?: CotizacionCuerpoDB[];
+  consideraciones?: CotizacionConsideracionDB[];
+}

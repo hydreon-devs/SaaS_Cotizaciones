@@ -5,13 +5,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import NuevaCotizacion from "./pages/NuevaCotizacion";
 import Plantillas from "./pages/Plantillas";
 import NotFound from "./pages/NotFound";
-import AdminPanel from "./pages/admin-panel";
+import Configuracion from "./pages/Configuracion";
+import ConfiguracionPerfil from "./pages/configuracion/Perfil";
+import ConfiguracionUsuarios from "./pages/configuracion/Usuarios";
+import ConfiguracionInvitaciones from "./pages/configuracion/Invitaciones";
+import ConfiguracionProductos from "./pages/configuracion/Productos";
+import ConfiguracionServicios from "./pages/configuracion/Servicios";
 
 const queryClient = new QueryClient();
 
@@ -50,13 +55,20 @@ const App = () => (
                 }
               />
               <Route 
-                path="admin-panel"
+                path="/configuracion"
                 element= {
-                  <AdminRoute>
-                    <AdminPanel />
-                  </AdminRoute>
+                  <ProtectedRoute>
+                    <Configuracion />
+                  </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<Navigate to="/configuracion/perfil" replace />} />
+                <Route path="perfil" element={<ConfiguracionPerfil />} />
+                <Route path="usuarios" element={<ConfiguracionUsuarios />} />
+                <Route path="invitaciones" element={<ConfiguracionInvitaciones />} />
+                <Route path="productos" element={<ConfiguracionProductos />} />
+                <Route path="servicios" element={<ConfiguracionServicios />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

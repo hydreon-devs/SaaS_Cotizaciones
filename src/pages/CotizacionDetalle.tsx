@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Copy, Loader2 } from "lucide-react";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CotizacionDetalle, obtenerCotizacionDetalle } from "@/services/cotizacionesService";
@@ -103,9 +102,7 @@ const CotizacionDetallePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="p-6 space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
@@ -233,7 +230,6 @@ const CotizacionDetallePage = () => {
             </Card>
           </>
         ) : null}
-      </main>
     </div>
   );
 };

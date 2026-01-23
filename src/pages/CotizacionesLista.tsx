@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -154,10 +153,7 @@ const CotizacionesLista = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="p-6">
-        <Card>
+    <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -330,8 +326,6 @@ const CotizacionesLista = () => {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
   );
 };
 

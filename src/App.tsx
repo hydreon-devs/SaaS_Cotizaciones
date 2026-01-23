@@ -10,6 +10,10 @@ import Login from "./pages/Login";
 import Index from "./pages/Index";
 import NuevaCotizacion from "./pages/NuevaCotizacion";
 import Plantillas from "./pages/Plantillas";
+import Servicios from "./pages/Servicios";
+import Productos from "./pages/Productos";
+import Database from "./pages/Database";
+import CotizacionDetalle from "./pages/CotizacionDetalle";
 import NotFound from "./pages/NotFound";
 import Configuracion from "./pages/Configuracion";
 import ConfiguracionPerfil from "./pages/configuracion/Perfil";
@@ -39,6 +43,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/cotizaciones/:id"
+                element={
+                  <ProtectedRoute>
+                    <CotizacionDetalle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/nueva"
                 element={
                   <ProtectedRoute>
@@ -51,6 +63,30 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Plantillas />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/database"
+                element={
+                  <ProtectedRoute>
+                    <Database />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/servicios"
+                element={
+                  <ProtectedRoute>
+                    <Servicios />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/productos"
+                element={
+                  <ProtectedRoute>
+                    <Productos />
                   </ProtectedRoute>
                 }
               />

@@ -96,15 +96,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-        const sessionUser = session.user;
-        const role = await fetchRole();
+      if (!session) return;
 
-        setUser({
-          token: session.access_token,
-          email: sessionUser.email ?? "",
-          name: sessionUser.user_metadata?.name ?? "",
-          role,
+      if (event === "TOKEN_REFRESHED") {
+        setUser((prev) => {
+          if (!prev) return prev;
+          return { ...prev, token: session.access_token };
+        });
+        return;
+      }
+
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        const sessionUser = session.user;
+        const fetchedRole = await fetchRole();
+
+        setUser((prev) => {
+          const role = fetchedRole || prev?.role || "";
+          return {
+            token: session.access_token,
+            email: sessionUser.email ?? "",
+            name: sessionUser.user_metadata?.name ?? "",
+            role,
+          };
         });
       }
     });

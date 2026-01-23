@@ -99,11 +99,11 @@ const Header = () => {
                 </Link>
               </DropdownMenuItem>
               
-              {user?.role === "admin" && <DropdownMenuItem className="text-muted-foreground">
-                <Link to="/admin-panel">
-                  Panel de administración
+              <DropdownMenuItem className="text-muted-foreground">
+                <Link to="/configuracion">
+                  Configuración 
                 </Link>
-              </DropdownMenuItem>}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

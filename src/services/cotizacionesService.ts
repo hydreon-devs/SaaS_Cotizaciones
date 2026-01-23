@@ -368,4 +368,45 @@ export class CotizacionesService {
 
     return clientesUnicos;
   }
+
+  /**
+   * Elimina una cotización y todos sus datos relacionados
+   * Solo puede ser ejecutado por administradores
+   */
+  static async eliminar(id: number): Promise<boolean> {
+    // Primero eliminar consideraciones
+    const { error: errorConsideraciones } = await supabase
+      .from('cotizacion_consideraciones')
+      .delete()
+      .eq('cotizacion_id', id);
+
+    if (errorConsideraciones) {
+      console.error('Error al eliminar consideraciones:', errorConsideraciones);
+      throw new Error('No se pudieron eliminar las consideraciones de la cotización');
+    }
+
+    // Luego eliminar el cuerpo (productos)
+    const { error: errorCuerpo } = await supabase
+      .from('cotizacion_cuerpo')
+      .delete()
+      .eq('cotizacion_id', id);
+
+    if (errorCuerpo) {
+      console.error('Error al eliminar cuerpo:', errorCuerpo);
+      throw new Error('No se pudieron eliminar los productos de la cotización');
+    }
+
+    // Finalmente eliminar la cotización
+    const { error } = await supabase
+      .from('cotizaciones')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al eliminar cotización:', error);
+      throw new Error('No se pudo eliminar la cotización');
+    }
+
+    return true;
+  }
 }

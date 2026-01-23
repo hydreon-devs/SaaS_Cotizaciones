@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -38,25 +38,33 @@ const CotizacionesLista = () => {
 
   // Cargar cotizaciones y clientes al montar el componente
   useEffect(() => {
-    cargarDatos();
-  }, []);
+    let activo = true;
 
-  const cargarDatos = async () => {
-    try {
-      setCargando(true);
-      const [cotizacionesData, clientesData] = await Promise.all([
-        CotizacionesService.obtenerTodas(),
-        CotizacionesService.obtenerClientes(),
-      ]);
-      setCotizaciones(cotizacionesData);
-      setClientes(clientesData);
-    } catch (error) {
-      toast.error("Error al cargar las cotizaciones");
-      console.error(error);
-    } finally {
-      setCargando(false);
-    }
-  };
+    const cargarDatos = async () => {
+      try {
+        setCargando(true);
+        const [cotizacionesData, clientesData] = await Promise.all([
+          CotizacionesService.obtenerTodas(),
+          CotizacionesService.obtenerClientes(),
+        ]);
+        if (!activo) return;
+        setCotizaciones(cotizacionesData);
+        setClientes(clientesData);
+      } catch (error) {
+        if (!activo) return;
+        toast.error("Error al cargar las cotizaciones");
+        console.error(error);
+      } finally {
+        if (activo) setCargando(false);
+      }
+    };
+
+    cargarDatos();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   // Convierte fecha dd/mm/yyyy a Date para comparación
   const parseFecha = (fechaStr: string): Date | null => {
@@ -66,28 +74,35 @@ const CotizacionesLista = () => {
     return new Date(year, month - 1, day);
   };
 
-  const filteredData = cotizaciones.filter((cot) => {
-    // Filtro por cliente
-    if (clienteFilter !== "todos" && cot.cliente !== clienteFilter) return false;
+  const filteredData = useMemo(() => {
+    return cotizaciones.filter((cot) => {
+      // Filtro por cliente
+      if (clienteFilter !== "todos" && cot.cliente !== clienteFilter) return false;
 
-    // Filtro por rango de fechas
-    const cotFecha = parseFecha(cot.fecha);
-    if (cotFecha) {
-      if (fechaDesde) {
-        const desde = new Date(fechaDesde);
-        if (cotFecha < desde) return false;
+      // Filtro por rango de fechas
+      const cotFecha = parseFecha(cot.fecha);
+      if (cotFecha) {
+        if (fechaDesde) {
+          const desde = new Date(fechaDesde);
+          if (cotFecha < desde) return false;
+        }
+        if (fechaHasta) {
+          const hasta = new Date(fechaHasta);
+          hasta.setHours(23, 59, 59, 999);
+          if (cotFecha > hasta) return false;
+        }
       }
-      if (fechaHasta) {
-        const hasta = new Date(fechaHasta);
-        hasta.setHours(23, 59, 59, 999); // Incluir todo el día
-        if (cotFecha > hasta) return false;
-      }
-    }
 
-    return true;
-  });
+      return true;
+    });
+  }, [cotizaciones, clienteFilter, fechaDesde, fechaHasta]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [clienteFilter, fechaDesde, fechaHasta]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -154,11 +169,17 @@ const CotizacionesLista = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todos">Todos los clientes</SelectItem>
-                      {clientes.map((cliente) => (
-                        <SelectItem key={cliente} value={cliente}>
-                          {cliente}
+                      {clientes.length === 0 ? (
+                        <SelectItem value="sin-clientes" disabled>
+                          No hay clientes disponibles
                         </SelectItem>
-                      ))}
+                      ) : (
+                        clientes.map((cliente) => (
+                          <SelectItem key={cliente} value={cliente}>
+                            {cliente}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -224,22 +245,30 @@ const CotizacionesLista = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedData.map((cotizacion) => (
-                        <TableRow
-                          key={cotizacion.id}
-                          className="hover:bg-muted/30 cursor-pointer"
-                          onClick={() => handleSeleccionarCotizacion(cotizacion)}
-                        >
-                          <TableCell className="font-medium text-primary">
-                            {cotizacion.numero}
-                          </TableCell>
-                          <TableCell>{cotizacion.cliente}</TableCell>
-                          <TableCell>{cotizacion.fecha}</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(cotizacion.montoTotal)}
+                      {paginatedData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground">
+                            No hay cotizaciones que coincidan con los filtros
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        paginatedData.map((cotizacion) => (
+                          <TableRow
+                            key={cotizacion.id}
+                            className="hover:bg-muted/30 cursor-pointer"
+                            onClick={() => handleSeleccionarCotizacion(cotizacion)}
+                          >
+                            <TableCell className="font-medium text-primary">
+                              {cotizacion.numero}
+                            </TableCell>
+                            <TableCell>{cotizacion.cliente}</TableCell>
+                            <TableCell>{cotizacion.fecha}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(cotizacion.montoTotal)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>

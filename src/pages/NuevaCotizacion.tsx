@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DatosCotizacion, Producto } from "@/types/cotizacion";
-import { serviciosMock } from "@/data/cotizaciones";
+import { DatosCotizacion, Producto, ProductoServicio, Servicio } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
+import { crearCotizacion } from "@/services/cotizacionesService";
+import { obtenerServicios } from "@/services/serviciosService";
+import { obtenerProductos } from "@/services/productosService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -35,6 +37,7 @@ const NuevaCotizacion = () => {
   const location = useLocation();
   const { user } = useAuth();
   const plantillaData = location.state?.plantilla as DatosCotizacion | undefined;
+  const cotizacionData = location.state?.cotizacion as DatosCotizacion | undefined;
   const vistaPreviaRef = useRef<HTMLDivElement>(null);
 
   const [datos, setDatos] = useState<DatosCotizacion>({
@@ -49,14 +52,32 @@ const NuevaCotizacion = () => {
   });
 
   useEffect(() => {
-    if (plantillaData) {
-      setDatos({
-        ...plantillaData,
-        productos: plantillaData.productos.map((p, index) => ({
-          ...p,
-          id: `${Date.now()}-${index}`,
-        })),
-      });
+    const dataBase = cotizacionData ?? plantillaData;
+    if (!dataBase) return;
+
+    const productos = dataBase.productos.map((p, index) => {
+      const productoId =
+        typeof p.productoId === "number"
+          ? p.productoId
+          : Number.isFinite(Number(p.id))
+            ? Number(p.id)
+            : null;
+
+      return {
+        ...p,
+        id: `${Date.now()}-${index}`,
+        productoId,
+      };
+    });
+
+    setDatos({
+      ...dataBase,
+      productos,
+    });
+
+    if (cotizacionData) {
+      toast.success("Cotización cargada correctamente");
+    } else {
       toast.success("Plantilla cargada correctamente");
     }
   }, []);
@@ -65,34 +86,137 @@ const NuevaCotizacion = () => {
   const [dialogPlantillaAbierto, setDialogPlantillaAbierto] = useState(false);
   const [nombrePlantilla, setNombrePlantilla] = useState("");
   const [descripcionPlantilla, setDescripcionPlantilla] = useState("");
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [cargandoServicios, setCargandoServicios] = useState(true);
+  const [productosServicio, setProductosServicio] = useState<ProductoServicio[]>([]);
+  const [cargandoProductos, setCargandoProductos] = useState(false);
 
   const handleInputChange = (field: keyof DatosCotizacion, value: string | number) => {
     setDatos((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAgregarProducto = () => {
-    if (!servicioSeleccionado) {
-      toast.error("Selecciona un servicio");
+  useEffect(() => {
+    let activo = true;
+
+    const cargarServicios = async () => {
+      setCargandoServicios(true);
+      try {
+        const data = await obtenerServicios();
+        if (!activo) return;
+        setServicios(data);
+      } catch (error) {
+        if (!activo) return;
+        console.error(error);
+        toast.error("No se pudieron cargar los servicios");
+      } finally {
+        if (activo) setCargandoServicios(false);
+      }
+    };
+
+    cargarServicios();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let activo = true;
+
+    const cargarProductos = async () => {
+      if (!servicioSeleccionado) {
+        setProductosServicio([]);
+        return;
+      }
+
+      setCargandoProductos(true);
+      try {
+        const data = await obtenerProductos(Number(servicioSeleccionado));
+        if (!activo) return;
+        setProductosServicio(data);
+      } catch (error) {
+        if (!activo) return;
+        console.error(error);
+        toast.error("No se pudieron cargar los productos del servicio");
+      } finally {
+        if (activo) setCargandoProductos(false);
+      }
+    };
+
+    cargarProductos();
+
+    return () => {
+      activo = false;
+    };
+  }, [servicioSeleccionado]);
+
+  const handleAgregarProducto = (producto: ProductoServicio) => {
+    const productoId = String(producto.id);
+    const nombreServicio =
+      servicios.find((servicio) => servicio.id === producto.id_servicio)?.nombre ||
+      "Servicio";
+
+    setDatos((prev) => {
+      const existe = prev.productos.some((item) => item.id === productoId);
+      if (existe) {
+        return prev;
+      }
+
+      const nuevoProducto: Producto = {
+        id: productoId,
+        descripcion: producto.nombre || "Producto sin nombre",
+        cantidad: 1,
+        precioUnitario: producto.precio ?? 0,
+        productoId: producto.id,
+        servicioId: producto.id_servicio,
+        nombreServicio,
+        descripcionProducto: producto.descripcion ?? null,
+      };
+
+      return {
+        ...prev,
+        productos: [...prev.productos, nuevoProducto],
+      };
+    });
+
+    toast.success("Producto agregado");
+  };
+
+  const handleAgregarTodos = () => {
+    if (productosServicio.length === 0) {
+      toast.error("No hay productos disponibles para este servicio");
       return;
     }
 
-    const servicio = serviciosMock.find((s) => s.id === servicioSeleccionado);
-    if (!servicio) return;
+    setDatos((prev) => {
+      const existentes = new Set(prev.productos.map((item) => item.id));
+      const nuevos = productosServicio
+        .filter((producto) => !existentes.has(String(producto.id)))
+        .map((producto) => {
+          const nombreServicio =
+            servicios.find((servicio) => servicio.id === producto.id_servicio)?.nombre ||
+            "Servicio";
+          return {
+            id: String(producto.id),
+            descripcion: producto.nombre || "Producto sin nombre",
+            cantidad: 1,
+            precioUnitario: producto.precio ?? 0,
+            productoId: producto.id,
+            servicioId: producto.id_servicio,
+            nombreServicio,
+            descripcionProducto: producto.descripcion ?? null,
+          };
+        });
 
-    const nuevoProducto: Producto = {
-      id: `${Date.now()}`,
-      descripcion: servicio.nombre,
-      cantidad: 1,
-      precioUnitario: servicio.precio,
-    };
+      if (nuevos.length === 0) return prev;
 
-    setDatos((prev) => ({
-      ...prev,
-      productos: [...prev.productos, nuevoProducto],
-    }));
+      return {
+        ...prev,
+        productos: [...prev.productos, ...nuevos],
+      };
+    });
 
-    setServicioSeleccionado("");
-    toast.success("Producto agregado");
+    toast.success("Productos agregados");
   };
 
   const handleEliminarProducto = (id: string) => {
@@ -112,7 +236,7 @@ const NuevaCotizacion = () => {
     }));
   };
 
-  const handleGuardarCotizacion = () => {
+  const handleGuardarCotizacion = async () => {
     if (!datos.cliente) {
       toast.error("Ingresa el nombre del cliente");
       return;
@@ -121,7 +245,14 @@ const NuevaCotizacion = () => {
       toast.error("Agrega al menos un producto");
       return;
     }
-    toast.success("Cotización guardada exitosamente");
+    try {
+      await crearCotizacion(datos, datos.productos);
+      toast.success("Cotización guardada exitosamente");
+    } catch (error) {
+      const mensaje =
+        error instanceof Error ? error.message : "No se pudo guardar la cotización";
+      toast.error(mensaje);
+    }
   };
 
   const handleAbrirDialogoPlantilla = () => {
@@ -319,22 +450,95 @@ const NuevaCotizacion = () => {
                   <label className="text-xs text-muted-foreground mb-1 block">Servicio</label>
                   <Select value={servicioSeleccionado} onValueChange={setServicioSeleccionado}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un servicio" />
+                      <SelectValue
+                        placeholder={
+                          cargandoServicios ? "Cargando servicios..." : "Selecciona un servicio"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {serviciosMock.map((servicio) => (
-                        <SelectItem key={servicio.id} value={servicio.id}>
-                          {servicio.nombre} - {formatCurrency(servicio.precio)}
+                      {servicios.length === 0 && !cargandoServicios ? (
+                        <SelectItem value="sin-servicios" disabled>
+                          No hay servicios disponibles
                         </SelectItem>
-                      ))}
+                      ) : (
+                        servicios.map((servicio) => (
+                          <SelectItem key={servicio.id} value={String(servicio.id)}>
+                            {servicio.nombre || "Servicio sin nombre"}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <Button onClick={handleAgregarProducto} className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar producto a la cotización
-                </Button>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+                    <span className="text-sm font-medium text-foreground">
+                      Productos del servicio
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAgregarTodos}
+                      disabled={cargandoProductos || productosServicio.length === 0}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Agregar todos
+                    </Button>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-3 font-medium">Producto</th>
+                        <th className="text-right p-3 font-medium w-28">Precio</th>
+                        <th className="text-right p-3 font-medium w-32">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cargandoProductos ? (
+                        <tr>
+                          <td className="p-3 text-muted-foreground" colSpan={3}>
+                            Cargando productos...
+                          </td>
+                        </tr>
+                      ) : productosServicio.length === 0 ? (
+                        <tr>
+                          <td className="p-3 text-muted-foreground" colSpan={3}>
+                            Selecciona un servicio para ver productos
+                          </td>
+                        </tr>
+                      ) : (
+                        productosServicio.map((producto) => (
+                          <tr key={producto.id} className="border-t border-border">
+                            <td className="p-3">
+                              <div className="font-medium text-foreground">
+                                {producto.nombre || "Producto sin nombre"}
+                              </div>
+                              {producto.descripcion && (
+                                <div className="text-xs text-muted-foreground">
+                                  {producto.descripcion}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              {formatCurrency(producto.precio ?? 0)}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAgregarProducto(producto)}
+                              >
+                                Agregar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Lista de productos agregados */}
                 {datos.productos.length > 0 && (

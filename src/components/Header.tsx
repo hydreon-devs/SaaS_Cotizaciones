@@ -53,14 +53,6 @@ const Header = () => {
               Plantillas
             </Link>
             <Link
-              to="/database"
-              className={`text-sm hover:text-primary transition-colors ${
-                location.pathname === "/database" ? "text-primary underline underline-offset-4" : "text-muted-foreground"
-              }`}
-            >
-              Base de Datos
-            </Link>
-            <Link
               to="/nueva"
               className={`text-sm hover:text-primary transition-colors ${
                 location.pathname === "/nueva" ? "text-primary underline underline-offset-4" : "text-muted-foreground"

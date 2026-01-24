@@ -13,7 +13,6 @@ import NuevaCotizacion from "./pages/NuevaCotizacion";
 import Plantillas from "./pages/Plantillas";
 import Servicios from "./pages/Servicios";
 import Productos from "./pages/Productos";
-import Database from "./pages/Database";
 import CotizacionDetalle from "./pages/CotizacionDetalle";
 import NotFound from "./pages/NotFound";
 import Configuracion from "./pages/Configuracion";
@@ -44,7 +43,6 @@ const App = () => (
                 <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
                 <Route path="/nueva" element={<NuevaCotizacion />} />
                 <Route path="/plantillas" element={<Plantillas />} />
-                <Route path="/database" element={<Database />} />
                 <Route path="/configuracion" element={<Configuracion />}>
                   <Route index element={<Navigate to="/configuracion/perfil" replace />} />
                   <Route path="perfil" element={<ConfiguracionPerfil />} />

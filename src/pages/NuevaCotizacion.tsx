@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Plus, Trash2, Download, Save } from "lucide-react";
+import { Plus, Trash2, Download, Save, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import VistaPrevia from "@/components/VistaPrevia";
@@ -89,6 +89,9 @@ const NuevaCotizacion = () => {
   const [cargandoServicios, setCargandoServicios] = useState(true);
   const [productosServicio, setProductosServicio] = useState<ProductoServicio[]>([]);
   const [cargandoProductos, setCargandoProductos] = useState(false);
+  const [guardandoCotizacion, setGuardandoCotizacion] = useState(false);
+  const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
+  const [descargandoPDF, setDescargandoPDF] = useState(false);
 
   const handleInputChange = (field: keyof DatosCotizacion, value: string | number) => {
     setDatos((prev) => ({ ...prev, [field]: value }));
@@ -245,12 +248,15 @@ const NuevaCotizacion = () => {
       return;
     }
     try {
+      setGuardandoCotizacion(true);
       await crearCotizacion(datos, datos.productos);
       toast.success("Cotización guardada exitosamente");
     } catch (error) {
       const mensaje =
         error instanceof Error ? error.message : "No se pudo guardar la cotización";
       toast.error(mensaje);
+    } finally {
+      setGuardandoCotizacion(false);
     }
   };
 
@@ -269,6 +275,7 @@ const NuevaCotizacion = () => {
     }
 
     try {
+      setGuardandoPlantilla(true);
       await PlantillasService.crear(
         nombrePlantilla,
         descripcionPlantilla,
@@ -285,13 +292,15 @@ const NuevaCotizacion = () => {
     } catch (error) {
       toast.error("Error al guardar la plantilla");
       console.error(error);
+    } finally {
+      setGuardandoPlantilla(false);
     }
   };
 
   const handleDescargarPDF = async () => {
     if (!vistaPreviaRef.current) return;
 
-    toast.loading("Generando PDF...", { id: "pdf-loading" });
+    setDescargandoPDF(true);
 
     try {
       const canvas = await html2canvas(vistaPreviaRef.current, {
@@ -326,12 +335,14 @@ const NuevaCotizacion = () => {
       const fileName = datos.cliente
         ? `cotizacion-${datos.cliente.replace(/\s+/g, "-").toLowerCase()}.pdf`
         : "cotizacion.pdf";
-      
+
       pdf.save(fileName);
-      toast.success("PDF descargado correctamente", { id: "pdf-loading" });
+      toast.success("PDF descargado correctamente");
     } catch (error) {
-      toast.error("Error al generar el PDF", { id: "pdf-loading" });
+      toast.error("Error al generar el PDF");
       console.error(error);
+    } finally {
+      setDescargandoPDF(false);
     }
   };
 
@@ -591,15 +602,28 @@ const NuevaCotizacion = () => {
           <div className="space-y-4">
             <VistaPrevia ref={vistaPreviaRef} datos={datos} />
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleDescargarPDF}>
-                <Download className="h-4 w-4 mr-2" />
-                Descargar Cotización
+              <Button variant="outline" onClick={handleDescargarPDF} disabled={descargandoPDF}>
+                {descargandoPDF ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {descargandoPDF ? "Generando..." : "Descargar Cotización"}
               </Button>
-              <Button variant="secondary" onClick={handleAbrirDialogoPlantilla}>
+              <Button variant="secondary" onClick={handleAbrirDialogoPlantilla} disabled={guardandoPlantilla}>
                 <Save className="h-4 w-4 mr-2" />
                 Guardar como Plantilla
               </Button>
-              <Button onClick={handleGuardarCotizacion}>Guardar Cotización</Button>
+              <Button onClick={handleGuardarCotizacion} disabled={guardandoCotizacion}>
+                {guardandoCotizacion ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  "Guardar Cotización"
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -637,10 +661,19 @@ const NuevaCotizacion = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogPlantillaAbierto(false)}>
+            <Button variant="outline" onClick={() => setDialogPlantillaAbierto(false)} disabled={guardandoPlantilla}>
               Cancelar
             </Button>
-            <Button onClick={handleGuardarComoPlantilla}>Guardar Plantilla</Button>
+            <Button onClick={handleGuardarComoPlantilla} disabled={guardandoPlantilla}>
+              {guardandoPlantilla ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Guardar Plantilla"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

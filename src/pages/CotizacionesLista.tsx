@@ -17,14 +17,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CotizacionesService } from "@/services/cotizacionesService";
 import { Cotizacion } from "@/types/cotizacion";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, Trash2 } from "lucide-react";
 
 const CotizacionesLista = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [clientes, setClientes] = useState<string[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -32,8 +42,12 @@ const CotizacionesLista = () => {
   const [fechaDesde, setFechaDesde] = useState<string>("");
   const [fechaHasta, setFechaHasta] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [cotizacionAEliminar, setCotizacionAEliminar] = useState<Cotizacion | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const itemsPerPage = 10;
+  const esAdmin = user?.role === "admin";
 
   // Cargar cotizaciones y clientes al montar el componente
   useEffect(() => {
@@ -152,8 +166,42 @@ const CotizacionesLista = () => {
     }
   };
 
+  const handleClickEliminar = (cotizacion: Cotizacion, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se active el click de la fila
+    if (!esAdmin) {
+      toast.error("No tienes permisos para eliminar cotizaciones. Solo los administradores pueden realizar esta acción.");
+      return;
+    }
+    setCotizacionAEliminar(cotizacion);
+    setDialogEliminarAbierto(true);
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!cotizacionAEliminar) return;
+
+    try {
+      setEliminando(true);
+      await CotizacionesService.eliminar(Number(cotizacionAEliminar.id));
+      setCotizaciones((prev) => prev.filter((c) => c.id !== cotizacionAEliminar.id));
+      toast.success("Cotización eliminada correctamente");
+      setDialogEliminarAbierto(false);
+      setCotizacionAEliminar(null);
+    } catch (error) {
+      toast.error("Error al eliminar la cotización");
+      console.error(error);
+    } finally {
+      setEliminando(false);
+    }
+  };
+
+  const handleCancelarEliminar = () => {
+    setDialogEliminarAbierto(false);
+    setCotizacionAEliminar(null);
+  };
+
   return (
-    <Card>
+    <>
+      <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -253,12 +301,13 @@ const CotizacionesLista = () => {
                         <TableHead>Cliente</TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead className="text-right">Monto Total</TableHead>
+                        <TableHead className="text-center w-16">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {paginatedData.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center text-muted-foreground">
                             No hay cotizaciones que coincidan con los filtros
                           </TableCell>
                         </TableRow>
@@ -276,6 +325,16 @@ const CotizacionesLista = () => {
                             <TableCell>{cotizacion.fecha}</TableCell>
                             <TableCell className="text-right">
                               {formatCurrency(cotizacion.montoTotal)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => handleClickEliminar(cotizacion, e)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))
@@ -326,6 +385,47 @@ const CotizacionesLista = () => {
             )}
           </CardContent>
         </Card>
+
+      {/* Diálogo de confirmación para eliminar */}
+
+      <Dialog open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminar Cotización</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la cotización{" "}
+              <span className="font-semibold text-foreground">
+                {cotizacionAEliminar?.numero}
+              </span>
+              ? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleCancelarEliminar}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

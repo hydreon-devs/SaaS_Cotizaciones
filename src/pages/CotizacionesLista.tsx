@@ -31,6 +31,7 @@ import { Cotizacion } from "@/types/cotizacion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, FileText, Trash2 } from "lucide-react";
+import { roles } from "@/utils/const";
 
 const CotizacionesLista = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const CotizacionesLista = () => {
   const [eliminando, setEliminando] = useState(false);
 
   const itemsPerPage = 10;
-  const esAdmin = user?.role === "admin";
+  const esAdmin = user?.role === roles.ADMIN;
 
   // Cargar cotizaciones y clientes al montar el componente
   useEffect(() => {

@@ -36,21 +36,22 @@ export default function ConfiguracionInvitaciones() {
   };
 
   return (
-    <Card className="max-w-xl">
+    <Card className="w-full max-w-xl">
       <CardHeader>
         <CardTitle>Invitaciones</CardTitle>
         <CardDescription>Envía una invitación por correo</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleInvite} className="space-y-4">
+        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
           <Input
             type="email"
             placeholder="email@dominio.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
+            className="flex-1"
           />
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Enviando..." : "Enviar invitación"}
           </Button>
         </form>

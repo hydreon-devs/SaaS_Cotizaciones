@@ -159,14 +159,16 @@ const Servicios = () => {
     <div className="bg-background">
       <main className="">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Servicios</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold text-foreground animate-fade-in">
+            Servicios
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1 animate-fade-in [animation-delay:100ms]">
             Administra el catálogo de servicios disponible para las cotizaciones
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <Card className="md:col-span-1 animate-fade-in [animation-delay:100ms]">
             <CardHeader>
               <CardTitle className="text-base">Crear servicio</CardTitle>
             </CardHeader>
@@ -205,19 +207,20 @@ const Servicios = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full" onClick={handleCrearServicio}>
+              <Button className="w-full group" onClick={handleCrearServicio}>
+                <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
                 Crear servicio
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2">
+          <Card className="md:col-span-2 animate-fade-in [animation-delay:200ms]">
             <CardHeader>
               <CardTitle className="text-base">Listado de servicios</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
+              <div className="border rounded-lg overflow-x-auto">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow className="bg-muted/50">
                       <TableHead>Nombre</TableHead>
@@ -250,8 +253,15 @@ const Servicios = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      servicios.map((servicio) => (
-                        <TableRow key={servicio.id}>
+                      servicios.map((servicio, index) => (
+                        <TableRow
+                          key={servicio.id}
+                          className="transition-all duration-200 ease-out hover:bg-primary/5 animate-fade-in opacity-0"
+                          style={{
+                            animationDelay: `${index * 50}ms`,
+                            animationFillMode: 'forwards'
+                          }}
+                        >
                           <TableCell className="font-medium">
                             {servicio.nombre ?? "Sin nombre"}
                           </TableCell>
@@ -265,23 +275,24 @@ const Servicios = () => {
                             {formatDate(servicio.created_at)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="outline"
-                                size="sm"
+                                size="icon"
+                                className="h-8 w-8 transition-all duration-200 hover:scale-110 active:scale-95"
                                 onClick={() => handleAbrirEditar(servicio)}
+                                title="Editar"
                               >
-                                <Pencil className="h-3.5 w-3.5 mr-1" />
-                                Editar
+                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-destructive/10"
                                 onClick={() => handleEliminar(servicio)}
+                                title="Eliminar"
                               >
-                                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                                Eliminar
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>

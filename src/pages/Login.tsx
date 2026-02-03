@@ -12,14 +12,21 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const triggerShake = () => {
+    setHasError(true);
+    setTimeout(() => setHasError(false), 500);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !password) {
       toast.error("Por favor completa todos los campos");
+      triggerShake();
       return;
     }
 
@@ -33,9 +40,11 @@ const Login = () => {
         navigate("/");
       } else {
         toast.error("Credenciales incorrectas");
+        triggerShake();
       }
     } catch (error) {
       toast.error("Error al iniciar sesión");
+      triggerShake();
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +74,7 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className={`space-y-4 ${hasError ? 'animate-shake' : ''}`}>
             <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-500 delay-400">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary" />
@@ -98,13 +107,13 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95"
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 transition-transform duration-200" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 transition-transform duration-200" />
                   )}
                 </button>
               </div>

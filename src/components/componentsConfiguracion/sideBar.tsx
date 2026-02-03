@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarInset, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarInset, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, useSidebar } from "@/components/ui/sidebar"
 import { Search, Settings, User } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { roles } from "@/utils/const"
@@ -64,8 +64,14 @@ const ConfigItems: SidebarItem[] = [
 
 export function AppSidebarConfig() {
   const { user } = useAuth();
+  const { setOpenMobile } = useSidebar();
+
+  const handleNavClick = () => {
+    setOpenMobile(false);
+  };
+
   return (
-    <Sidebar variant="inset" collapsible="none">
+    <Sidebar variant="inset" collapsible="offcanvas">
       <SidebarInset >
         <SidebarContent>
         <SidebarGroup className="flex flex-col gap-y-6">
@@ -88,7 +94,7 @@ export function AppSidebarConfig() {
                 return (
                 <SidebarMenuItem key={`item-${item.title}`}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url ?? ""}>
+                    <NavLink to={item.url ?? ""} onClick={handleNavClick}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                     </NavLink>

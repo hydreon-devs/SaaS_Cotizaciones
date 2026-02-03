@@ -46,6 +46,7 @@ const CotizacionesLista = () => {
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<Cotizacion | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
   const itemsPerPage = 10;
   const esAdmin = user?.role === roles.ADMIN;
@@ -183,10 +184,18 @@ const CotizacionesLista = () => {
     try {
       setEliminando(true);
       await CotizacionesService.eliminar(Number(cotizacionAEliminar.id));
-      setCotizaciones((prev) => prev.filter((c) => c.id !== cotizacionAEliminar.id));
-      toast.success("Cotización eliminada correctamente");
+
+      // Close dialog and trigger exit animation
       setDialogEliminarAbierto(false);
-      setCotizacionAEliminar(null);
+      setEliminandoId(cotizacionAEliminar.id);
+
+      // Wait for animation then remove from state
+      setTimeout(() => {
+        setCotizaciones((prev) => prev.filter((c) => c.id !== cotizacionAEliminar.id));
+        setCotizacionAEliminar(null);
+        setEliminandoId(null);
+        toast.success("Cotización eliminada correctamente");
+      }, 300);
     } catch (error) {
       toast.error("Error al eliminar la cotización");
       console.error(error);
@@ -217,10 +226,13 @@ const CotizacionesLista = () => {
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-foreground">Filtrar Cotizaciones</h3>
                 <Link to="/nueva">
-                  <Button>Nueva Cotización</Button>
+                  <Button className="group">
+                    <span className="transition-transform duration-200 group-hover:scale-110">+</span>
+                    Nueva Cotización
+                  </Button>
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Cliente</label>
                   <Select value={clienteFilter} onValueChange={setClienteFilter}>
@@ -274,17 +286,22 @@ const CotizacionesLista = () => {
                 <p className="text-sm text-muted-foreground">Cargando cotizaciones...</p>
               </div>
             ) : cotizaciones.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">
+              <div className="text-center py-12 animate-fade-in">
+                <div className="animate-float">
+                  <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                </div>
+                <h2 className="text-xl font-semibold text-foreground mb-2 animate-fade-in [animation-delay:200ms]">
                   No hay cotizaciones guardadas
                 </h2>
-                <p className="text-sm text-muted-foreground mb-6">
+                <p className="text-sm text-muted-foreground mb-6 animate-fade-in [animation-delay:400ms]">
                   Crea tu primera cotización para comenzar
                 </p>
-                <Button onClick={() => navigate("/nueva")}>
-                  Crear Nueva Cotización
-                </Button>
+                <div className="animate-fade-in [animation-delay:600ms]">
+                  <Button onClick={() => navigate("/nueva")} className="group">
+                    <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
+                    Crear Nueva Cotización
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -294,8 +311,8 @@ const CotizacionesLista = () => {
                   </span>
                 </div>
 
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table className="min-w-[600px]">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead>N° Cotización</TableHead>
@@ -313,13 +330,23 @@ const CotizacionesLista = () => {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        paginatedData.map((cotizacion) => (
+                        paginatedData.map((cotizacion, index) => (
                           <TableRow
                             key={cotizacion.id}
-                            className="hover:bg-muted/30 cursor-pointer"
+                            className={`
+                              cursor-pointer
+                              transition-all duration-200 ease-out
+                              hover:bg-primary/5 hover:shadow-sm
+                              animate-fade-in opacity-0
+                              ${eliminandoId === cotizacion.id ? 'animate-slide-out-right !opacity-100' : ''}
+                            `}
+                            style={{
+                              animationDelay: eliminandoId === cotizacion.id ? '0ms' : `${index * 50}ms`,
+                              animationFillMode: 'forwards'
+                            }}
                             onClick={() => handleSeleccionarCotizacion(cotizacion)}
                           >
-                            <TableCell className="font-medium text-primary">
+                            <TableCell className="font-medium text-primary transition-transform duration-200 group-hover:translate-x-1">
                               {cotizacion.numero}
                             </TableCell>
                             <TableCell>{cotizacion.cliente}</TableCell>
@@ -331,10 +358,10 @@ const CotizacionesLista = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95"
                                 onClick={(e) => handleClickEliminar(cotizacion, e)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -346,38 +373,58 @@ const CotizacionesLista = () => {
 
                 {/* Paginación */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span className="text-sm text-muted-foreground order-2 sm:order-1">
                       Mostrando {(currentPage - 1) * itemsPerPage + 1}-
                       {Math.min(currentPage * itemsPerPage, filteredData.length)} de{" "}
                       {filteredData.length} resultados
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 order-1 sm:order-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(1)}
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
+                        className="transition-all duration-200 hover:scale-105 active:scale-95"
                       >
-                        «
+                        ‹
                       </Button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                        >
-                          {page}
-                        </Button>
-                      ))}
+                      {/* Mobile: solo página actual */}
+                      <span className="sm:hidden px-3 py-1 text-sm">
+                        {currentPage} / {totalPages}
+                      </span>
+                      {/* Desktop: números de página */}
+                      <div className="hidden sm:flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((page) => {
+                            if (totalPages <= 5) return true;
+                            if (page === 1 || page === totalPages) return true;
+                            if (Math.abs(page - currentPage) <= 1) return true;
+                            return false;
+                          })
+                          .map((page, idx, arr) => (
+                            <span key={page} className="flex items-center">
+                              {idx > 0 && arr[idx - 1] !== page - 1 && (
+                                <span className="px-1 text-muted-foreground">...</span>
+                              )}
+                              <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                              >
+                                {page}
+                              </Button>
+                            </span>
+                          ))}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(totalPages)}
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
+                        className="transition-all duration-200 hover:scale-105 active:scale-95"
                       >
-                        »
+                        ›
                       </Button>
                     </div>
                   </div>

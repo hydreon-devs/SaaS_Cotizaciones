@@ -103,22 +103,23 @@ const CotizacionDetallePage = () => {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Volver</span>
             </Button>
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">Detalle de cotización</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Detalle de cotización</h1>
+              <p className="text-sm text-muted-foreground mt-1 hidden sm:block">
                 Revisa la información completa y crea una nueva cotización
               </p>
             </div>
           </div>
-          <Button onClick={handleCrearDesde} disabled={!detalle || cargando}>
+          <Button onClick={handleCrearDesde} disabled={!detalle || cargando} className="w-full sm:w-auto">
             <Copy className="h-4 w-4 mr-2" />
-            Crear cotización a partir de esta
+            <span className="sm:hidden">Duplicar</span>
+            <span className="hidden sm:inline">Crear cotización a partir de esta</span>
           </Button>
         </div>
 
@@ -141,7 +142,7 @@ const CotizacionDetallePage = () => {
               <CardHeader>
                 <CardTitle className="text-base">Información general</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Cliente</span>
                   <div className="font-medium">{detalle.cotizacion.nombre_cliente ?? "-"}</div>
@@ -170,8 +171,8 @@ const CotizacionDetallePage = () => {
                 <CardTitle className="text-base">Productos incluidos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto">
+                  <table className="w-full text-sm min-w-[500px]">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-3 font-medium">Producto</th>

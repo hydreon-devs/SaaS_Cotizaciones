@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function ConfiguracionUsuarios() {
   return (
-    <Card className="max-w-xl">
+    <Card className="w-full max-w-xl">
       <CardHeader>
         <CardTitle>Usuarios</CardTitle>
         <CardDescription>Gestiona usuarios</CardDescription>

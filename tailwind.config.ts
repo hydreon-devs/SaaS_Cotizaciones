@@ -169,6 +169,85 @@ export default {
   					transform: 'rotate(0deg)',
   					opacity: '1'
   				}
+  			},
+  			'float': {
+  				'0%, 100%': {
+  					transform: 'translateY(0)'
+  				},
+  				'50%': {
+  					transform: 'translateY(-10px)'
+  				}
+  			},
+  			'slide-out-right': {
+  				'0%': {
+  					transform: 'translateX(0)',
+  					opacity: '1'
+  				},
+  				'100%': {
+  					transform: 'translateX(30px)',
+  					opacity: '0'
+  				}
+  			},
+  			'scale-in': {
+  				'0%': {
+  					transform: 'scale(0.95)',
+  					opacity: '0'
+  				},
+  				'100%': {
+  					transform: 'scale(1)',
+  					opacity: '1'
+  				}
+  			},
+  			'card-hover': {
+  				'0%': {
+  					transform: 'translateY(0)'
+  				},
+  				'100%': {
+  					transform: 'translateY(-4px)'
+  				}
+  			},
+  			'pulse-subtle': {
+  				'0%, 100%': {
+  					opacity: '1'
+  				},
+  				'50%': {
+  					opacity: '0.7'
+  				}
+  			},
+  			'bounce-subtle': {
+  				'0%': {
+  					transform: 'scale(1)'
+  				},
+  				'50%': {
+  					transform: 'scale(1.05)'
+  				},
+  				'100%': {
+  					transform: 'scale(1)'
+  				}
+  			},
+  			'shake': {
+  				'0%, 100%': {
+  					transform: 'translateX(0)'
+  				},
+  				'20%, 60%': {
+  					transform: 'translateX(-4px)'
+  				},
+  				'40%, 80%': {
+  					transform: 'translateX(4px)'
+  				}
+  			},
+  			'success-check': {
+  				'0%': {
+  					transform: 'scale(0)',
+  					opacity: '0'
+  				},
+  				'50%': {
+  					transform: 'scale(1.2)'
+  				},
+  				'100%': {
+  					transform: 'scale(1)',
+  					opacity: '1'
+  				}
   			}
   		},
   		animation: {
@@ -181,7 +260,14 @@ export default {
   			'slide-in-from-left': 'slide-in-from-left 0.5s ease-out',
   			'slide-in-from-right': 'slide-in-from-right 0.5s ease-out',
   			'zoom-in': 'zoom-in 0.5s ease-out',
-  			'spin-in': 'spin-in 0.7s ease-out'
+  			'spin-in': 'spin-in 0.7s ease-out',
+  			'float': 'float 3s ease-in-out infinite',
+  			'slide-out-right': 'slide-out-right 0.3s ease-out forwards',
+  			'scale-in': 'scale-in 0.4s ease-out forwards',
+  			'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+  			'bounce-subtle': 'bounce-subtle 0.5s ease-out',
+  			'shake': 'shake 0.4s ease-out',
+  			'success-check': 'success-check 0.4s ease-out forwards'
   		}
   	}
   },

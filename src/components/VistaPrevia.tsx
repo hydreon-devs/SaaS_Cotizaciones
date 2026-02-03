@@ -70,7 +70,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
           <p>+57 312 2345 6789</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Client Info */}
           <div>
             <h4 className="font-semibold text-foreground mb-2">Cliente</h4>
@@ -107,7 +107,8 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
                   </div>
 
                   {/* Products Table */}
-                  <table className="w-full text-xs">
+                  <div className="overflow-x-auto">
+                  <table className="w-full text-xs min-w-[300px]">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-2 font-medium">Producto</th>
@@ -129,6 +130,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               ))}
             </div>
@@ -137,7 +139,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
 
         {/* Totals */}
         <div className="flex justify-end mb-6">
-          <div className="w-48 space-y-1 text-xs">
+          <div className="w-full sm:w-48 space-y-1 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal:</span>
               <span>{formatCurrency(subtotal)}</span>

@@ -48,8 +48,8 @@ export default function ConfiguracionPerfil() {
   }, []);
 
   return (
-    <Card className="max-w-xl">
-      <CardHeader>  
+    <Card className="w-full max-w-xl">
+      <CardHeader>
         <CardTitle>Perfil</CardTitle>
         <CardDescription>Gestiona tu información de usuario</CardDescription>
       </CardHeader>
@@ -79,7 +79,7 @@ export default function ConfiguracionPerfil() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
             Guardar
           </Button>
         </CardFooter>

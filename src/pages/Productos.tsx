@@ -215,14 +215,16 @@ const Productos = () => {
     <div className="bg-background">
       <main className="">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Productos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold text-foreground animate-fade-in">
+            Productos
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1 animate-fade-in [animation-delay:100ms]">
             Gestiona los productos asociados a cada servicio
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <Card className="md:col-span-1 animate-fade-in [animation-delay:100ms]">
             <CardHeader>
               <CardTitle className="text-base">Crear producto</CardTitle>
             </CardHeader>
@@ -292,19 +294,20 @@ const Productos = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full" onClick={handleCrear}>
+              <Button className="w-full group" onClick={handleCrear}>
+                <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
                 Crear producto
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2">
+          <Card className="md:col-span-2 animate-fade-in [animation-delay:200ms]">
             <CardHeader>
               <CardTitle className="text-base">Listado de productos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
+              <div className="border rounded-lg overflow-x-auto">
+                <Table className="min-w-[700px]">
                   <TableHeader>
                     <TableRow className="bg-muted/50">
                       <TableHead>Producto</TableHead>
@@ -338,8 +341,15 @@ const Productos = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      productos.map((producto) => (
-                        <TableRow key={producto.id}>
+                      productos.map((producto, index) => (
+                        <TableRow
+                          key={producto.id}
+                          className="transition-all duration-200 ease-out hover:bg-primary/5 animate-fade-in opacity-0"
+                          style={{
+                            animationDelay: `${index * 50}ms`,
+                            animationFillMode: 'forwards'
+                          }}
+                        >
                           <TableCell className="font-medium">
                             {producto.nombre ?? "Sin nombre"}
                             {producto.descripcion && (
@@ -357,23 +367,24 @@ const Productos = () => {
                             {formatDate(producto.created_at)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="outline"
-                                size="sm"
+                                size="icon"
+                                className="h-8 w-8 transition-all duration-200 hover:scale-110 active:scale-95"
                                 onClick={() => handleAbrirEditar(producto)}
+                                title="Editar"
                               >
-                                <Pencil className="h-3.5 w-3.5 mr-1" />
-                                Editar
+                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-destructive/10"
                                 onClick={() => handleEliminar(producto)}
+                                title="Eliminar"
                               >
-                                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                                Eliminar
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>

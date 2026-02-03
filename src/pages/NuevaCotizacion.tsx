@@ -334,7 +334,7 @@ const NuevaCotizacion = () => {
                 <CardTitle className="text-base">Información de cotización</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">
                       Cliente / Empresa
@@ -381,7 +381,7 @@ const NuevaCotizacion = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Fecha</label>
                     <Input
@@ -454,11 +454,12 @@ const NuevaCotizacion = () => {
                       onClick={handleAgregarTodos}
                       disabled={cargandoProductos || productosServicio.length === 0}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar todos
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Agregar todos</span>
                     </Button>
                   </div>
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[400px]">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-3 font-medium">Producto</th>
@@ -509,12 +510,13 @@ const NuevaCotizacion = () => {
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
 
                 {/* Lista de productos agregados */}
                 {datos.productos.length > 0 && (
-                  <div className="border border-border rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="border border-border rounded-lg overflow-x-auto">
+                    <table className="w-full text-sm min-w-[400px]">
                       <thead className="bg-muted/50">
                         <tr>
                           <th className="text-left p-3 font-medium">Producto</th>
@@ -564,8 +566,13 @@ const NuevaCotizacion = () => {
           {/* Vista Previa */}
           <div className="space-y-4">
             <VistaPrevia ref={vistaPreviaRef} datos={datos} />
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleDescargarWord} disabled={descargandoWord}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={handleDescargarWord}
+                disabled={descargandoWord}
+                className="w-full sm:w-auto"
+              >
                 {descargandoWord ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -573,11 +580,20 @@ const NuevaCotizacion = () => {
                 )}
                 {descargandoWord ? "Generando..." : "Descargar Cotización"}
               </Button>
-              <Button variant="secondary" onClick={handleAbrirDialogoPlantilla} disabled={guardandoPlantilla}>
+              <Button
+                variant="secondary"
+                onClick={handleAbrirDialogoPlantilla}
+                disabled={guardandoPlantilla}
+                className="w-full sm:w-auto"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Guardar como Plantilla
               </Button>
-              <Button onClick={handleGuardarCotizacion} disabled={guardandoCotizacion}>
+              <Button
+                onClick={handleGuardarCotizacion}
+                disabled={guardandoCotizacion}
+                className="w-full sm:w-auto"
+              >
                 {guardandoCotizacion ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

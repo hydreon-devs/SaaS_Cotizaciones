@@ -36,6 +36,7 @@ const Plantillas = () => {
   const [plantillaEditando, setPlantillaEditando] = useState<PlantillaCotizacion | null>(null);
   const [nombreEditar, setNombreEditar] = useState("");
   const [descripcionEditar, setDescripcionEditar] = useState("");
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
   // Cargar plantillas desde Supabase al montar el componente
   useEffect(() => {
@@ -92,13 +93,21 @@ const Plantillas = () => {
 
   const handleEliminarPlantilla = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await PlantillasService.eliminar(id);
-      await cargarPlantillas();
-      toast.success("Plantilla eliminada correctamente");
-    } catch (error) {
-      toast.error("Error al eliminar la plantilla");
-    }
+    // Trigger exit animation
+    setEliminandoId(id);
+
+    // Wait for animation to complete before actually deleting
+    setTimeout(async () => {
+      try {
+        await PlantillasService.eliminar(id);
+        await cargarPlantillas();
+        toast.success("Plantilla eliminada correctamente");
+      } catch (error) {
+        toast.error("Error al eliminar la plantilla");
+      } finally {
+        setEliminandoId(null);
+      }
+    }, 300);
   };
 
   const formatCurrency = (amount: number) => {
@@ -120,8 +129,10 @@ const Plantillas = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground">Plantillas de Cotización</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold text-foreground animate-fade-in">
+          Plantillas de Cotización
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1 animate-fade-in [animation-delay:100ms]">
           Selecciona una plantilla para comenzar rápidamente con tu cotización
         </p>
       </div>
@@ -132,24 +143,39 @@ const Plantillas = () => {
             <p className="text-sm text-muted-foreground">Cargando plantillas...</p>
           </div>
         ) : plantillas.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">
+          <div className="text-center py-12 animate-fade-in">
+            <div className="animate-float">
+              <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2 animate-fade-in [animation-delay:200ms]">
               No hay plantillas guardadas
             </h2>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground mb-6 animate-fade-in [animation-delay:400ms]">
               Crea tu primera plantilla desde el cotizador
             </p>
-            <Button onClick={() => navigate("/nueva")}>
-              Crear Nueva Cotización
-            </Button>
+            <div className="animate-fade-in [animation-delay:600ms]">
+              <Button onClick={() => navigate("/nueva")} className="group">
+                <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
+                Crear Nueva Cotización
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {plantillas.map((plantilla) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {plantillas.map((plantilla, index) => (
             <Card
               key={plantilla.id}
-              className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all duration-200 group"
+              className={`
+                cursor-pointer group
+                transition-all duration-300 ease-out
+                hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1
+                animate-scale-in opacity-0
+                ${eliminandoId === plantilla.id ? 'animate-slide-out-right' : ''}
+              `}
+              style={{
+                animationDelay: `${index * 75}ms`,
+                animationFillMode: 'forwards'
+              }}
               onClick={() => handleSeleccionarPlantilla(plantilla)}
             >
               <CardHeader className="pb-3">
@@ -177,12 +203,13 @@ const Plantillas = () => {
                       Incluye:
                     </div>
                     <ul className="space-y-1.5">
-                      {plantilla.datos.productos.slice(0, 3).map((producto) => (
+                      {plantilla.datos.productos.slice(0, 3).map((producto, idx) => (
                         <li
                           key={producto.id}
-                          className="flex items-center gap-2 text-sm text-foreground"
+                          className="flex items-center gap-2 text-sm text-foreground transition-transform duration-200 group-hover:translate-x-1"
+                          style={{ transitionDelay: `${idx * 50}ms` }}
                         >
-                          <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          <Check className="h-3.5 w-3.5 text-primary flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
                           <span className="truncate">{producto.descripcion}</span>
                         </li>
                       ))}
@@ -220,20 +247,21 @@ const Plantillas = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                     onClick={(e) => handleAbrirEditar(plantilla, e)}
                   >
-                    <Edit className="h-3.5 w-3.5 mr-1" />
-                    Editar
+                    <Edit className="h-3.5 w-3.5 sm:mr-1 transition-transform duration-200 group-hover:rotate-12" />
+                    <span className="hidden sm:inline">Editar</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-destructive hover:text-destructive"
+                    className="flex-1 text-destructive hover:text-destructive transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] hover:bg-destructive/10"
                     onClick={(e) => handleEliminarPlantilla(plantilla.id, e)}
+                    disabled={eliminandoId === plantilla.id}
                   >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Eliminar
+                    <Trash2 className="h-3.5 w-3.5 sm:mr-1 transition-transform duration-200 hover:rotate-12" />
+                    <span className="hidden sm:inline">Eliminar</span>
                   </Button>
                 </div>
               </CardContent>

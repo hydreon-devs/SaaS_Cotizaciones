@@ -36,6 +36,16 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
     });
   };
 
+  // Agrupar productos por servicio
+  const productosPorServicio = datos.productos.reduce((acc, producto) => {
+    const nombreServicio = producto.nombreServicio || "Sin servicio";
+    if (!acc[nombreServicio]) {
+      acc[nombreServicio] = [];
+    }
+    acc[nombreServicio].push(producto);
+    return acc;
+  }, {} as Record<string, typeof datos.productos>);
+
   return (
     <div ref={ref} className="bg-card rounded-lg border border-border p-6 shadow-sm">
       <h3 className="font-semibold text-foreground mb-4">Vista Previa de Cotización</h3>
@@ -79,41 +89,50 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
         </div>
         <div className="border-b border-border mb-6" />
 
-        {/* Detail Table */}
+        {/* Detail Tables by Service */}
         <div className="mb-6">
-          <h4 className="font-semibold text-foreground mb-2">Detalles de los servicios y productos</h4>
-          <div className="border border-border rounded overflow-hidden">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-2 font-medium">Descripción</th>
-                  <th className="text-center p-2 font-medium w-12">Cant.</th>
-                  <th className="text-right p-2 font-medium w-20">Precio</th>
-                  <th className="text-right p-2 font-medium w-24">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datos.productos.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="p-4 text-center text-muted-foreground">
-                      Agrega productos para ver el detalle
-                    </td>
-                  </tr>
-                ) : (
-                  datos.productos.map((producto) => (
-                    <tr key={producto.id} className="border-t border-border">
-                      <td className="p-2">{producto.descripcion}</td>
-                      <td className="p-2 text-center">{producto.cantidad}</td>
-                      <td className="p-2 text-right">{formatCurrency(producto.precioUnitario)}</td>
-                      <td className="p-2 text-right">
-                        {formatCurrency(producto.cantidad * producto.precioUnitario)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <h4 className="font-semibold text-foreground mb-3">Detalles de los servicios y productos</h4>
+
+          {datos.productos.length === 0 ? (
+            <div className="border border-border rounded p-4 text-center text-muted-foreground text-xs">
+              Agrega productos para ver el detalle
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(productosPorServicio).map(([nombreServicio, productos]) => (
+                <div key={nombreServicio} className="border border-border rounded overflow-hidden">
+                  {/* Service Header */}
+                  <div className="bg-primary/10 px-3 py-2 border-b border-border">
+                    <h5 className="font-semibold text-foreground text-xs">{nombreServicio}</h5>
+                  </div>
+
+                  {/* Products Table */}
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-2 font-medium">Producto</th>
+                        <th className="text-center p-2 font-medium w-12">Cant.</th>
+                        <th className="text-right p-2 font-medium w-20">Precio</th>
+                        <th className="text-right p-2 font-medium w-24">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productos.map((producto) => (
+                        <tr key={producto.id} className="border-t border-border">
+                          <td className="p-2">{producto.descripcion}</td>
+                          <td className="p-2 text-center">{producto.cantidad}</td>
+                          <td className="p-2 text-right">{formatCurrency(producto.precioUnitario)}</td>
+                          <td className="p-2 text-right">
+                            {formatCurrency(producto.cantidad * producto.precioUnitario)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Totals */}

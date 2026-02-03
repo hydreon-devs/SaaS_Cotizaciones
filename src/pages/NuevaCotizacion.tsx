@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Plus, Trash2, Download, Save, Loader2 } from "lucide-react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import VistaPrevia from "@/components/VistaPrevia";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +27,7 @@ import { PlantillasService } from "@/services/plantillasService";
 import { crearCotizacion } from "@/services/cotizacionesService";
 import { obtenerServicios } from "@/services/serviciosService";
 import { obtenerProductos } from "@/services/productosService";
+import { WordExportService } from "@/services/wordExportService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -91,7 +90,7 @@ const NuevaCotizacion = () => {
   const [cargandoProductos, setCargandoProductos] = useState(false);
   const [guardandoCotizacion, setGuardandoCotizacion] = useState(false);
   const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
-  const [descargandoPDF, setDescargandoPDF] = useState(false);
+  const [descargandoWord, setDescargandoWord] = useState(false);
 
   const handleInputChange = (field: keyof DatosCotizacion, value: string | number) => {
     setDatos((prev) => ({ ...prev, [field]: value }));
@@ -297,52 +296,16 @@ const NuevaCotizacion = () => {
     }
   };
 
-  const handleDescargarPDF = async () => {
-    if (!vistaPreviaRef.current) return;
-
-    setDescargandoPDF(true);
-
+  const handleDescargarWord = async () => {
+    setDescargandoWord(true);
     try {
-      const canvas = await html2canvas(vistaPreviaRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const fileName = datos.cliente
-        ? `cotizacion-${datos.cliente.replace(/\s+/g, "-").toLowerCase()}.pdf`
-        : "cotizacion.pdf";
-
-      pdf.save(fileName);
-      toast.success("PDF descargado correctamente");
+      await WordExportService.generarDocumento(datos);
+      toast.success("Documento Word descargado correctamente");
     } catch (error) {
-      toast.error("Error al generar el PDF");
+      toast.error("Error al generar el documento Word");
       console.error(error);
     } finally {
-      setDescargandoPDF(false);
+      setDescargandoWord(false);
     }
   };
 
@@ -602,13 +565,13 @@ const NuevaCotizacion = () => {
           <div className="space-y-4">
             <VistaPrevia ref={vistaPreviaRef} datos={datos} />
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleDescargarPDF} disabled={descargandoPDF}>
-                {descargandoPDF ? (
+              <Button variant="outline" onClick={handleDescargarWord} disabled={descargandoWord}>
+                {descargandoWord ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <Download className="h-4 w-4 mr-2" />
                 )}
-                {descargandoPDF ? "Generando..." : "Descargar Cotización"}
+                {descargandoWord ? "Generando..." : "Descargar Cotización"}
               </Button>
               <Button variant="secondary" onClick={handleAbrirDialogoPlantilla} disabled={guardandoPlantilla}>
                 <Save className="h-4 w-4 mr-2" />

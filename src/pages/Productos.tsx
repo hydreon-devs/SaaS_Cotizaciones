@@ -306,10 +306,10 @@ const Productos = () => {
               <CardTitle className="text-base">Listado de productos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-x-auto">
+              <div className="border rounded-lg overflow-auto max-h-[calc(100vh-280px)]">
                 <Table className="min-w-[700px]">
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
+                  <TableHeader className="sticky top-0 z-10">
+                    <TableRow className="bg-muted/50 [&>th]:bg-muted/95 [&>th]:backdrop-blur-sm">
                       <TableHead>Producto</TableHead>
                       <TableHead>Servicio</TableHead>
                       <TableHead>Precio</TableHead>

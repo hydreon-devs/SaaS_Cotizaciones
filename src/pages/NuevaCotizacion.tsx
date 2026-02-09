@@ -581,7 +581,7 @@ const NuevaCotizacion = () => {
                 {descargandoWord ? "Generando..." : "Descargar Cotización"}
               </Button>
               <Button
-                variant="secondary"
+                variant="outline"
                 onClick={handleAbrirDialogoPlantilla}
                 disabled={guardandoPlantilla}
                 className="w-full sm:w-auto"

@@ -3,8 +3,6 @@ import {
   DatosCotizacion,
   Producto,
   PlantillaDB,
-  PlantillaServicioDB,
-  PlantillaProductoDB
 } from '@/types/cotizacion';
 import { supabase } from '@/api/conection';
 
@@ -31,6 +29,10 @@ function toAppFormat(plantillaDB: PlantillaDB): PlantillaCotizacion {
             descripcion: producto.nombre_producto,
             cantidad: producto.cantidad,
             precioUnitario: producto.precio_unitario,
+            productoId: producto.producto_id ?? null,
+            servicioId: servicio.servicio_id ?? null,
+            nombreServicio: servicio.nombre_servicio || 'Servicio',
+            descripcionProducto: producto.descripcion_producto ?? null,
           });
         }
       }
@@ -163,48 +165,79 @@ export class PlantillasService {
       throw new Error('No se pudo crear la plantilla');
     }
 
-    // 2. Crear un servicio genérico para agrupar los productos
+    // 2. Agrupar productos por servicio para preservar la estructura
     if (datos.productos.length > 0) {
-      const servicioId = generateId();
+      // Agrupar productos por servicioId/nombreServicio
+      const productosPorServicio = datos.productos.reduce((acc, producto) => {
+        const key = producto.servicioId?.toString() || producto.nombreServicio || 'Sin servicio';
+        const nombreServicio = producto.nombreServicio || 'Sin servicio';
 
-      const { error: errorServicio } = await supabase
-        .from('plantilla_servicios')
-        .insert({
-          id: servicioId,
-          plantilla_id: plantillaId,
-          nombre_servicio: 'Servicios',
-          descripcion_servicio: 'Servicios de la plantilla',
-          orden: 1,
-        });
+        if (!acc[key]) {
+          acc[key] = {
+            servicioId: producto.servicioId ?? null,
+            nombreServicio,
+            productos: [],
+          };
+        }
+        acc[key].productos.push(producto);
+        return acc;
+      }, {} as Record<string, { servicioId: number | null; nombreServicio: string; productos: Producto[] }>);
 
-      if (errorServicio) {
-        console.error('Error al crear servicio de plantilla:', errorServicio);
-        // Rollback: eliminar la plantilla creada
-        await supabase.from('plantillas').delete().eq('id', plantillaId);
-        throw new Error('No se pudo crear el servicio de la plantilla');
-      }
+      const serviciosCreados: string[] = [];
+      let orden = 1;
 
-      // 3. Crear los productos asociados al servicio
-      const productosDB = datos.productos.map((producto, index) => ({
-        id: generateId(),
-        plantilla_servicio_id: servicioId,
-        nombre_producto: producto.descripcion,
-        descripcion_producto: producto.descripcion,
-        cantidad: producto.cantidad,
-        precio_unitario: producto.precioUnitario,
-        subtotal: producto.cantidad * producto.precioUnitario,
-      }));
+      // 3. Crear un plantilla_servicios por cada grupo
+      for (const grupo of Object.values(productosPorServicio)) {
+        const plantillaServicioId = generateId();
 
-      const { error: errorProductos } = await supabase
-        .from('plantilla_productos')
-        .insert(productosDB);
+        const { error: errorServicio } = await supabase
+          .from('plantilla_servicios')
+          .insert({
+            id: plantillaServicioId,
+            plantilla_id: plantillaId,
+            servicio_id: grupo.servicioId,
+            nombre_servicio: grupo.nombreServicio,
+            descripcion_servicio: `Productos de ${grupo.nombreServicio}`,
+            orden: orden++,
+          });
 
-      if (errorProductos) {
-        console.error('Error al crear productos de plantilla:', errorProductos);
-        // Rollback: eliminar servicio y plantilla
-        await supabase.from('plantilla_servicios').delete().eq('id', servicioId);
-        await supabase.from('plantillas').delete().eq('id', plantillaId);
-        throw new Error('No se pudieron crear los productos de la plantilla');
+        if (errorServicio) {
+          console.error('Error al crear servicio de plantilla:', errorServicio);
+          // Rollback: eliminar servicios creados y plantilla
+          if (serviciosCreados.length > 0) {
+            await supabase.from('plantilla_productos').delete().in('plantilla_servicio_id', serviciosCreados);
+            await supabase.from('plantilla_servicios').delete().in('id', serviciosCreados);
+          }
+          await supabase.from('plantillas').delete().eq('id', plantillaId);
+          throw new Error('No se pudo crear el servicio de la plantilla');
+        }
+
+        serviciosCreados.push(plantillaServicioId);
+
+        // 4. Crear los productos asociados a este servicio
+        const productosDB = grupo.productos.map((producto) => ({
+          id: generateId(),
+          plantilla_servicio_id: plantillaServicioId,
+          producto_id: producto.productoId ?? null,
+          nombre_producto: producto.descripcion,
+          descripcion_producto: producto.descripcionProducto ?? producto.descripcion,
+          cantidad: producto.cantidad,
+          precio_unitario: producto.precioUnitario,
+          subtotal: producto.cantidad * producto.precioUnitario,
+        }));
+
+        const { error: errorProductos } = await supabase
+          .from('plantilla_productos')
+          .insert(productosDB);
+
+        if (errorProductos) {
+          console.error('Error al crear productos de plantilla:', errorProductos);
+          // Rollback completo
+          await supabase.from('plantilla_productos').delete().in('plantilla_servicio_id', serviciosCreados);
+          await supabase.from('plantilla_servicios').delete().in('id', serviciosCreados);
+          await supabase.from('plantillas').delete().eq('id', plantillaId);
+          throw new Error('No se pudieron crear los productos de la plantilla');
+        }
       }
     }
 

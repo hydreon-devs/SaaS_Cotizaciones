@@ -277,7 +277,6 @@ export class WordExportService {
               size: 24,
             }),
           ],
-          shading: { fill: "e0e7ff" },
           spacing: { before: 200, after: 100 },
         })
       );

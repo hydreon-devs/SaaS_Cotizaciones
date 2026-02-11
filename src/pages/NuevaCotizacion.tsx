@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Plus, Trash2, Download, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Download, Save, Loader2, RotateCcw } from "lucide-react";
 import VistaPrevia from "@/components/VistaPrevia";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,6 +309,22 @@ const NuevaCotizacion = () => {
     }
   };
 
+  const handleLimpiarDatos = () => {
+    setDatos({
+      cliente: "",
+      evento: "",
+      consideraciones: "",
+      descuento: 0,
+      fecha: "",
+      nombreEncargado: "Carlos Jaramillo",
+      cargo: "Director general",
+      productos: [],
+    });
+    setServicioSeleccionado("");
+    setProductosServicio([]);
+    toast.success("Datos limpiados correctamente");
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
@@ -319,11 +335,22 @@ const NuevaCotizacion = () => {
 
   return (
     <div>
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-foreground">Generador de cotizaciones</h1>
-          <p className="text-sm text-muted-foreground">
-            Crea cotizaciones de manera rápida y sencilla
-          </p>
+        <div className="mb-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Generador de cotizaciones</h1>
+            <p className="text-sm text-muted-foreground">
+              Crea cotizaciones de manera rápida y sencilla
+            </p>
+          </div>
+          <div className="mt-2 flex justify-end">
+            <Button
+              onClick={handleLimpiarDatos}
+              className="w-full sm:w-auto"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Limpiar datos
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -587,7 +614,7 @@ const NuevaCotizacion = () => {
                 className="w-full sm:w-auto"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Guardar como Plantilla
+                Guardar Plantilla
               </Button>
               <Button
                 onClick={handleGuardarCotizacion}

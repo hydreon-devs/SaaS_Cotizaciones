@@ -72,6 +72,32 @@ export class WordExportService {
     });
   }
 
+  private static formatDateLong(fecha: Date): string {
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const año = fecha.getFullYear();
+    
+    return `${mes} ${dia} del ${año}`;
+  }
+
+  private static formatDateLongInverted(fecha: Date): string {
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const año = fecha.getFullYear();
+    
+    return `${dia} de ${mes} del ${año}`;
+  }
+  
   private static async crearHeader(): Promise<Header> {
     const encabezadoData = await this.fetchImageAsUint8Array(encabezadoImg);
 
@@ -141,82 +167,79 @@ export class WordExportService {
     });
   }
 
-  private static crearSeccionEmpresa(): Paragraph[] {
+  private static crearSeccionIntroduccion(datos: DatosCotizacion): Paragraph[] {
+    const fechaHoy = new Date();
+    const fechaEvento = datos.fecha ? new Date(datos.fecha) : null;
     return [
+      // Fecha actual
       new Paragraph({
-        alignment: AlignmentType.RIGHT,
         children: [
           new TextRun({
-            text: "Medellín, Colombia",
-            size: 20,
-            color: "666666",
+            text: `Medellín, ${this.formatDateLong(fechaHoy)}`,
+            size: 22,
           }),
         ],
+        spacing: { after: 200 },
       }),
+      // Cliente
       new Paragraph({
-        alignment: AlignmentType.RIGHT,
         children: [
           new TextRun({
-            text: "cjproducciones@gmail.com",
-            size: 20,
-            color: "666666",
+            text: "Sr./Sra.",
+            size: 22,
           }),
         ],
+        spacing: { after: 50 },
       }),
       new Paragraph({
-        alignment: AlignmentType.RIGHT,
         children: [
-          new TextRun({
-            text: "+57 312 2345 6789",
-            size: 20,
-            color: "666666",
-          }),
-        ],
-        spacing: { after: 400 },
-      }),
-    ];
-  }
-
-  private static crearSeccionCliente(datos: DatosCotizacion): Paragraph[] {
-    return [
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "Cliente: ",
-            bold: true,
-            size: 24,
-          }),
           new TextRun({
             text: datos.cliente || "Sin especificar",
-            size: 24,
+            bold: true,
+            size: 22,
           }),
         ],
-        spacing: { after: 100 },
+        spacing: { after: 300 },
       }),
+      // Descripción de CJ Producciones
       new Paragraph({
         children: [
           new TextRun({
-            text: "Evento: ",
+            text: "CJ PRODUCCIONES: ",
             bold: true,
-            size: 24,
+            size: 22,
           }),
           new TextRun({
-            text: datos.evento || "Sin especificar",
-            size: 24,
+            text: "Es una empresa especializada en la producción de bodas, eventos corporativos, espectáculos artísticos y musicales.",
+            size: 22,
           }),
         ],
-        spacing: { after: 100 },
+        spacing: { after: 300 },
       }),
+      // Párrafo del evento
       new Paragraph({
         children: [
           new TextRun({
-            text: "Fecha: ",
-            bold: true,
-            size: 24,
+            text: "La siguiente es la cotización para: ",
+            size: 22,
           }),
           new TextRun({
-            text: this.formatDate(datos.fecha),
-            size: 24,
+            text: datos.evento || "el evento",
+            bold: true,
+            size: 22,
+          }),
+          new TextRun({
+            text: ", que se realizará el día ",
+            size: 22,
+          }),
+          new TextRun({
+            text: fechaEvento ? this.formatDateLongInverted(fechaEvento) : "a confirmar",
+            bold: true,
+            size: 22,
+          }),
+          new TextRun({
+            text: ".",
+            size: 22,
           }),
         ],
         spacing: { after: 400 },
@@ -224,13 +247,7 @@ export class WordExportService {
     ];
   }
 
-  private static crearSeccionesServicios(datos: DatosCotizacion): (Paragraph | Table)[] {
-    const borderStyle = {
-      style: BorderStyle.SINGLE,
-      size: 1,
-      color: "e5e7eb",
-    };
-
+  private static crearSeccionesServicios(datos: DatosCotizacion): Paragraph[] {
     // Agrupar productos por servicio
     const productosPorServicio = datos.productos.reduce((acc, producto) => {
       const nombreServicio = producto.nombreServicio || "Sin servicio";
@@ -241,7 +258,7 @@ export class WordExportService {
       return acc;
     }, {} as Record<string, typeof datos.productos>);
 
-    const elementos: (Paragraph | Table)[] = [];
+    const elementos: Paragraph[] = [];
 
     Object.entries(productosPorServicio).forEach(([nombreServicio, productos]) => {
       // Calcular total del servicio
@@ -265,54 +282,36 @@ export class WordExportService {
         })
       );
 
-      // Tabla de productos (solo Producto)
-      const headerRow = new TableRow({
-        children: [
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [new TextRun({ text: "Producto", bold: true, size: 22 })],
-              }),
-            ],
-            shading: { fill: "f3f4f6" },
-            width: { size: 80, type: WidthType.PERCENTAGE },
-            borders: {
-              top: borderStyle,
-              bottom: borderStyle,
-              left: borderStyle,
-              right: borderStyle,
-            },
-          }),
-        ],
-      });
-
-      const productRows = productos.map(
-        (producto) =>
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [
-                  new Paragraph({
-                    children: [new TextRun({ text: producto.descripcion, size: 22 })],
-                  }),
-                ],
-                borders: {
-                  top: borderStyle,
-                  bottom: borderStyle,
-                  left: borderStyle,
-                  right: borderStyle,
-                },
-              }),
-            ],
-          })
-      );
-
+      // Encabezado "Producto" (sin viñeta)
       elementos.push(
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [headerRow, ...productRows],
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Productos:",
+              bold: true,
+              size: 22,
+            }),
+          ],
+          spacing: { after: 50 },
         })
       );
+
+      // Lista de productos con viñetas
+      productos.forEach((producto) => {
+        elementos.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: producto.descripcion,
+                size: 22,
+              }),
+            ],
+            bullet: {
+              level: 0,
+            },
+          })
+        );
+      });
 
       // Espacio después de cada servicio
       elementos.push(new Paragraph({ spacing: { after: 200 } }));
@@ -464,12 +463,11 @@ export class WordExportService {
           headers: { default: header },
           footers: { default: footer },
           children: [
-            ...this.crearSeccionEmpresa(),
-            ...this.crearSeccionCliente(datos),
+            ...this.crearSeccionIntroduccion(datos),
             new Paragraph({
               heading: HeadingLevel.HEADING_2,
               children: [
-                new TextRun({ text: "Detalles de los servicios y productos", bold: true, size: 26 }),
+                new TextRun({ text: "Los servicios que ofrecemos son los siguientes:", bold: true, size: 26 }),
               ],
               spacing: { after: 200 },
             }),

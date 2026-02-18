@@ -107,3 +107,12 @@ export const eliminarProducto = async (id: number): Promise<void> => {
     throw new Error("No se pudo eliminar el producto");
   }
 };
+
+export const eliminarProductosPorServicio = async (idServicio: number): Promise<void> => {
+  const { error } = await supabase.from("productos").delete().eq("id_servicio", idServicio);
+
+  if (error) {
+    console.error("Error al eliminar productos del servicio:", error);
+    throw new Error("No se pudieron eliminar los productos del servicio");
+  }
+};

@@ -115,7 +115,7 @@ const toAppFormat = (cotizacion: CotizacionDB): Cotizacion => {
     id: String(idBase),
     numero: cotizacion.numero ?? cotizacion.codigo ?? generateNumero(cotizacion.id),
     cliente: cotizacion.cliente ?? cotizacion.nombre_cliente ?? "Sin cliente",
-    fecha: formatFecha(cotizacion.fecha ?? cotizacion.fecha_emision ?? cotizacion.created_at ?? ""),
+    fecha: formatFecha(cotizacion.created_at ?? ""),
     montoTotal: toNumber(cotizacion.monto_total ?? cotizacion.montoTotal ?? cotizacion.total ?? cotizacion.monto ?? 0),
     estado: normalizeEstado(cotizacion.estado ?? cotizacion.status),
   };

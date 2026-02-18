@@ -71,6 +71,10 @@ const Productos = () => {
 
   const [dialogEditarAbierto, setDialogEditarAbierto] = useState(false);
   const [productoEditando, setProductoEditando] = useState<ProductoServicio | null>(null);
+
+  const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [productoAEliminar, setProductoAEliminar] = useState<ProductoServicio | null>(null);
+  const [eliminando, setEliminando] = useState(false);
   const [idServicioEditar, setIdServicioEditar] = useState("");
   const [nombreEditar, setNombreEditar] = useState("");
   const [descripcionEditar, setDescripcionEditar] = useState("");
@@ -196,18 +200,25 @@ const Productos = () => {
     }
   };
 
-  const handleEliminar = async (producto: ProductoServicio) => {
-    const confirmacion = window.confirm(
-      `¿Seguro que deseas eliminar el producto "${producto.nombre ?? "sin nombre"}"?`
-    );
-    if (!confirmacion) return;
+  const handleClickEliminar = (producto: ProductoServicio) => {
+    setProductoAEliminar(producto);
+    setDialogEliminarAbierto(true);
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!productoAEliminar) return;
 
     try {
-      await eliminarProducto(producto.id);
+      setEliminando(true);
+      await eliminarProducto(productoAEliminar.id);
+      setDialogEliminarAbierto(false);
+      setProductos((prev) => prev.filter((p) => p.id !== productoAEliminar.id));
+      setProductoAEliminar(null);
       toast.success("Producto eliminado correctamente");
-      await cargarDatos();
-    } catch (errorEliminar) {
+    } catch {
       toast.error("No se pudo eliminar el producto");
+    } finally {
+      setEliminando(false);
     }
   };
 
@@ -381,7 +392,7 @@ const Productos = () => {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-destructive/10"
-                                onClick={() => handleEliminar(producto)}
+                                onClick={() => handleClickEliminar(producto)}
                                 title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -398,6 +409,44 @@ const Productos = () => {
           </Card>
         </div>
       </main>
+
+      <Dialog open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminar Producto</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar el producto{" "}
+              <span className="font-semibold text-foreground">
+                {productoAEliminar?.nombre ?? "sin nombre"}
+              </span>
+              ? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDialogEliminarAbierto(false)}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>
         <DialogContent className="max-w-md">

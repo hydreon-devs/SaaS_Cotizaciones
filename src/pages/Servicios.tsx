@@ -35,6 +35,7 @@ import {
   actualizarServicio,
   eliminarServicio,
 } from "@/services/serviciosService";
+import { eliminarProductosPorServicio } from "@/services/productosService";
 import { toast } from "sonner";
 
 const estadosDisponibles = [
@@ -59,6 +60,10 @@ const Servicios = () => {
 
   const [dialogEditarAbierto, setDialogEditarAbierto] = useState(false);
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null);
+
+  const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [servicioAEliminar, setServicioAEliminar] = useState<Servicio | null>(null);
+  const [eliminando, setEliminando] = useState(false);
   const [nombreEditar, setNombreEditar] = useState("");
   const [descripcionEditar, setDescripcionEditar] = useState("");
   const [estadoEditar, setEstadoEditar] = useState("activo");
@@ -140,18 +145,26 @@ const Servicios = () => {
     }
   };
 
-  const handleEliminar = async (servicio: Servicio) => {
-    const confirmacion = window.confirm(
-      `¿Seguro que deseas eliminar el servicio "${servicio.nombre ?? "sin nombre"}"?`
-    );
-    if (!confirmacion) return;
+  const handleClickEliminar = (servicio: Servicio) => {
+    setServicioAEliminar(servicio);
+    setDialogEliminarAbierto(true);
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!servicioAEliminar) return;
 
     try {
-      await eliminarServicio(servicio.id);
+      setEliminando(true);
+      await eliminarProductosPorServicio(servicioAEliminar.id);
+      await eliminarServicio(servicioAEliminar.id);
+      setDialogEliminarAbierto(false);
+      setServicios((prev) => prev.filter((s) => s.id !== servicioAEliminar.id));
+      setServicioAEliminar(null);
       toast.success("Servicio eliminado correctamente");
-      await cargarServicios();
-    } catch (errorEliminar) {
+    } catch {
       toast.error("No se pudo eliminar el servicio");
+    } finally {
+      setEliminando(false);
     }
   };
 
@@ -289,7 +302,7 @@ const Servicios = () => {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-destructive/10"
-                                onClick={() => handleEliminar(servicio)}
+                                onClick={() => handleClickEliminar(servicio)}
                                 title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -306,6 +319,44 @@ const Servicios = () => {
           </Card>
         </div>
       </main>
+
+      <Dialog open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminar Servicio</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar el servicio{" "}
+              <span className="font-semibold text-foreground">
+                {servicioAEliminar?.nombre ?? "sin nombre"}
+              </span>
+              ? Esta acción eliminará también todos los productos asociados a este servicio y no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDialogEliminarAbierto(false)}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>
         <DialogContent className="max-w-md">

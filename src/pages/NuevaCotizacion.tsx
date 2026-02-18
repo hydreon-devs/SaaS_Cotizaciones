@@ -158,7 +158,7 @@ const NuevaCotizacion = () => {
       "Servicio";
 
     setDatos((prev) => {
-      const existe = prev.productos.some((item) => item.id === productoId);
+      const existe = prev.productos.some((item) => item.productoId === producto.id);
       if (existe) {
         return prev;
       }
@@ -190,9 +190,9 @@ const NuevaCotizacion = () => {
     }
 
     setDatos((prev) => {
-      const existentes = new Set(prev.productos.map((item) => item.id));
+      const existentes = new Set(prev.productos.map((item) => item.productoId).filter(Boolean));
       const nuevos = productosServicio
-        .filter((producto) => !existentes.has(String(producto.id)))
+        .filter((producto) => !existentes.has(producto.id))
         .map((producto) => {
           const nombreServicio =
             servicios.find((servicio) => servicio.id === producto.id_servicio)?.nombre ||

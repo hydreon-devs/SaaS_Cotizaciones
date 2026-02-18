@@ -59,7 +59,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
           </div>
           <div className="text-right">
             <h2 className="text-lg font-bold text-foreground">COTIZACIÓN</h2>
-            <p className="text-muted-foreground text-xs">Fecha: {datos.fecha || formatDate(today)}</p>
+            <p className="text-muted-foreground text-xs">Fecha: {datos.fecha ? datos.fecha.split("-").reverse().join("/") : formatDate(today)}</p>
           </div>
         </div>
 

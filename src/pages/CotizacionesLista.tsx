@@ -30,7 +30,7 @@ import { CotizacionesService } from "@/services/cotizacionesService";
 import { Cotizacion } from "@/types/cotizacion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, FileText, Trash2 } from "lucide-react";
+import { Loader2, FileText, Trash2, AlertCircle } from "lucide-react";
 import { roles } from "@/utils/const";
 
 const CotizacionesLista = () => {
@@ -50,6 +50,7 @@ const CotizacionesLista = () => {
 
   const itemsPerPage = 10;
   const esAdmin = user?.role === roles.ADMIN;
+  const rangoFechaInvalido = !!fechaDesde && !!fechaHasta && fechaDesde > fechaHasta;
 
   // Cargar cotizaciones y clientes al montar el componente
   useEffect(() => {
@@ -257,6 +258,7 @@ const CotizacionesLista = () => {
                     type="date"
                     value={fechaDesde}
                     onChange={(e) => setFechaDesde(e.target.value)}
+                    className={rangoFechaInvalido ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
                 </div>
                 <div>
@@ -265,7 +267,14 @@ const CotizacionesLista = () => {
                     type="date"
                     value={fechaHasta}
                     onChange={(e) => setFechaHasta(e.target.value)}
+                    className={rangoFechaInvalido ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
+                  {rangoFechaInvalido && (
+                    <p className="flex items-center gap-1 mt-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      La fecha hasta debe ser mayor que la fecha desde
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-end">
                   <Button variant="outline" onClick={handleLimpiarFiltros} className="w-full">

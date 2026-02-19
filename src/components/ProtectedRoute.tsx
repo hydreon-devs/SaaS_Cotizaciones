@@ -1,15 +1,22 @@
 import { Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+const AuthLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+  </div>
+);
+
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <AuthLoader />;
   }
 
   if (!isAuthenticated) {
@@ -24,9 +31,10 @@ interface AdminRouteProps {
 }
 
 export const AdminRoute = ({ children }: AdminRouteProps) => {
-    const { user,isLoading, isAuthenticated } = useAuth();
+    const { user, isLoading, isAuthenticated } = useAuth();
+
     if (isLoading) {
-        return null;
+        return <AuthLoader />;
     }
 
     if (!isAuthenticated) {

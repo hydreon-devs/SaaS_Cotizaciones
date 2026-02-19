@@ -45,6 +45,7 @@ export interface DatosCotizacion {
   evento: string;
   consideraciones: string;
   descuento: number;
+  iva?: number;
   fecha: string;
   nombreEncargado: string;
   cargo: string;

@@ -13,7 +13,8 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
   );
   const descuentoMonto = subtotal * (datos.descuento / 100);
   const subtotalConDescuento = subtotal - descuentoMonto;
-  const iva = subtotalConDescuento * 0.19;
+  const ivaPorcentaje = datos.iva ?? 19;
+  const iva = subtotalConDescuento * (ivaPorcentaje / 100);
   const total = subtotalConDescuento + iva;
 
   const formatCurrency = (amount: number) => {
@@ -140,20 +141,24 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
         {/* Totals */}
         <div className="flex justify-end mb-6">
           <div className="w-full sm:w-48 space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal:</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
+            {(ivaPorcentaje > 0 || datos.descuento > 0) && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal:</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+            )}
             {datos.descuento > 0 && (
               <div className="flex justify-between text-success">
                 <span>Descuento ({datos.descuento}%):</span>
                 <span>-{formatCurrency(descuentoMonto)}</span>
               </div>
             )}
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">IVA (19%):</span>
-              <span>{formatCurrency(iva)}</span>
-            </div>
+            {ivaPorcentaje > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">IVA ({ivaPorcentaje}%):</span>
+                <span>{formatCurrency(iva)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-foreground pt-2 border-t border-border">
               <span>Total:</span>
               <span>{formatCurrency(total)}</span>

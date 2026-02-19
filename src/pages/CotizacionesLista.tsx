@@ -169,11 +169,7 @@ const CotizacionesLista = () => {
   };
 
   const handleClickEliminar = (cotizacion: Cotizacion, e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que se active el click de la fila
-    if (!esAdmin) {
-      toast.error("No tienes permisos para eliminar cotizaciones. Solo los administradores pueden realizar esta acción.");
-      return;
-    }
+    e.stopPropagation();
     setCotizacionAEliminar(cotizacion);
     setDialogEliminarAbierto(true);
   };
@@ -355,14 +351,16 @@ const CotizacionesLista = () => {
                               {formatCurrency(cotizacion.montoTotal)}
                             </TableCell>
                             <TableCell className="text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95"
-                                onClick={(e) => handleClickEliminar(cotizacion, e)}
-                              >
-                                <Trash2 className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
-                              </Button>
+                              {esAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95"
+                                  onClick={(e) => handleClickEliminar(cotizacion, e)}
+                                >
+                                  <Trash2 className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))

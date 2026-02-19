@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Plus, Trash2, Download, Save, Loader2, RotateCcw } from "lucide-react";
 import VistaPrevia from "@/components/VistaPrevia";
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatosCotizacion, Producto, ProductoServicio, Servicio } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
@@ -43,11 +44,15 @@ const NuevaCotizacion = () => {
     evento: "",
     consideraciones: "",
     descuento: 0,
+    iva: 19,
     fecha: "",
     nombreEncargado: "Carlos Jaramillo",
     cargo: "Director general",
     productos: [],
   });
+
+  const [ivaHabilitado, setIvaHabilitado] = useState(true);
+  const ivaGuardadoRef = useRef<number>(19);
 
   useEffect(() => {
     const dataBase = cotizacionData ?? plantillaData;
@@ -95,6 +100,16 @@ const NuevaCotizacion = () => {
   const handleInputChange = (field: keyof DatosCotizacion, value: string | number) => {
     setDatos((prev) => ({ ...prev, [field]: value }));
   };
+
+  const handleToggleIva = useCallback((habilitado: boolean) => {
+    if (!habilitado) {
+      ivaGuardadoRef.current = datos.iva ?? 19;
+      setDatos((prev) => ({ ...prev, iva: 0 }));
+    } else {
+      setDatos((prev) => ({ ...prev, iva: ivaGuardadoRef.current }));
+    }
+    setIvaHabilitado(habilitado);
+  }, [datos.iva]);
 
   useEffect(() => {
     let activo = true;
@@ -315,11 +330,14 @@ const NuevaCotizacion = () => {
       evento: "",
       consideraciones: "",
       descuento: 0,
+      iva: 19,
       fecha: "",
       nombreEncargado: "Carlos Jaramillo",
       cargo: "Director general",
       productos: [],
     });
+    setIvaHabilitado(true);
+    ivaGuardadoRef.current = 19;
     setServicioSeleccionado("");
     setProductosServicio([]);
     toast.success("Datos limpiados correctamente");
@@ -396,7 +414,7 @@ const NuevaCotizacion = () => {
 
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">
-                    Descuento (en porcentaje)
+                    Descuento (%)
                   </label>
                   <Input
                     type="number"
@@ -405,6 +423,28 @@ const NuevaCotizacion = () => {
                     max="100"
                     value={datos.descuento || ""}
                     onChange={(e) => handleInputChange("descuento", Number(e.target.value))}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-muted-foreground">IVA (%)</label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {ivaHabilitado ? "Habilitado" : "Deshabilitado"}
+                      </span>
+                      <Switch checked={ivaHabilitado} onCheckedChange={handleToggleIva} />
+                    </div>
+                  </div>
+                  <Input
+                    type="number"
+                    placeholder="19"
+                    min="0"
+                    max="100"
+                    disabled={!ivaHabilitado}
+                    value={ivaHabilitado ? (datos.iva ?? 19) : ""}
+                    onChange={(e) => handleInputChange("iva", Number(e.target.value))}
+                    className={!ivaHabilitado ? "opacity-40 cursor-not-allowed" : ""}
                   />
                 </div>
 

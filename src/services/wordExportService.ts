@@ -51,7 +51,8 @@ export class WordExportService {
     );
     const descuentoMonto = subtotal * (datos.descuento / 100);
     const subtotalConDescuento = subtotal - descuentoMonto;
-    const iva = subtotalConDescuento * 0.19;
+    const ivaPorcentaje = datos.iva ?? 19;
+    const iva = subtotalConDescuento * (ivaPorcentaje / 100);
     const total = subtotalConDescuento + iva;
 
     return { subtotal, descuentoMonto, subtotalConDescuento, iva, total };
@@ -321,16 +322,20 @@ export class WordExportService {
 
   private static crearSeccionTotales(datos: DatosCotizacion): Paragraph[] {
     const totales = this.calcularTotales(datos);
-    const paragraphs: Paragraph[] = [
-      new Paragraph({ spacing: { before: 300 } }),
-      new Paragraph({
-        alignment: AlignmentType.RIGHT,
-        children: [
-          new TextRun({ text: "Subtotal: ", size: 22 }),
-          new TextRun({ text: this.formatCurrency(totales.subtotal), size: 22 }),
-        ],
-      }),
-    ];
+    const ivaPorcentaje = datos.iva ?? 19;
+    const paragraphs: Paragraph[] = [new Paragraph({ spacing: { before: 300 } })];
+
+    if (ivaPorcentaje > 0 || datos.descuento > 0) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({ text: "Subtotal: ", size: 22 }),
+            new TextRun({ text: this.formatCurrency(totales.subtotal), size: 22 }),
+          ],
+        })
+      );
+    }
 
     if (datos.descuento > 0) {
       paragraphs.push(
@@ -352,27 +357,24 @@ export class WordExportService {
       );
     }
 
+    if (ivaPorcentaje > 0) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({ text: `IVA (${ivaPorcentaje}%): `, size: 22 }),
+            new TextRun({ text: this.formatCurrency(totales.iva), size: 22 }),
+          ],
+        })
+      );
+    }
+
     paragraphs.push(
       new Paragraph({
         alignment: AlignmentType.RIGHT,
         children: [
-          new TextRun({ text: "IVA (19%): ", size: 22 }),
-          new TextRun({ text: this.formatCurrency(totales.iva), size: 22 }),
-        ],
-      }),
-      new Paragraph({
-        alignment: AlignmentType.RIGHT,
-        children: [
-          new TextRun({
-            text: "TOTAL: ",
-            bold: true,
-            size: 28,
-          }),
-          new TextRun({
-            text: this.formatCurrency(totales.total),
-            bold: true,
-            size: 28,
-          }),
+          new TextRun({ text: "TOTAL: ", bold: true, size: 28 }),
+          new TextRun({ text: this.formatCurrency(totales.total), bold: true, size: 28 }),
         ],
         spacing: { after: 400 },
       })

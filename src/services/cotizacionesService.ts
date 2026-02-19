@@ -77,7 +77,7 @@ const formatFecha = (value: unknown): string => {
   }
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString("es-CL");
+  return date.toLocaleDateString("es-CO");
 };
 
 const generateId = (): string => {

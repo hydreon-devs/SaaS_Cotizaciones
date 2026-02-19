@@ -326,9 +326,9 @@ const NuevaCotizacion = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-CL", {
+    return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "CLP",
+      currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
   };

@@ -17,9 +17,9 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
   const total = subtotalConDescuento + iva;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-CL", {
+    return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "CLP",
+      currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
   };
@@ -29,7 +29,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
   validUntil.setDate(validUntil.getDate() + 30);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("es-CL", {
+    return date.toLocaleDateString("es-CO", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

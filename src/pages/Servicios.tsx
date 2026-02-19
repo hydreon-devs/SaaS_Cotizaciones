@@ -46,7 +46,7 @@ const estadosDisponibles = [
 const formatDate = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("es-CL").format(date);
+  return new Intl.DateTimeFormat("es-CO").format(date);
 };
 
 const Servicios = () => {

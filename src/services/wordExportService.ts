@@ -37,9 +37,9 @@ export class WordExportService {
   }
 
   private static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("es-CL", {
+    return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "CLP",
+      currency: "COP",
       minimumFractionDigits: 0,
     }).format(amount);
   }
@@ -59,13 +59,13 @@ export class WordExportService {
 
   private static formatDate(fecha: string): string {
     if (!fecha) {
-      return new Date().toLocaleDateString("es-CL", {
+      return new Date().toLocaleDateString("es-CO", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
     }
-    return new Date(fecha).toLocaleDateString("es-CL", {
+    return new Date(fecha).toLocaleDateString("es-CO", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

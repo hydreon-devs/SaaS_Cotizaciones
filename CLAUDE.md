@@ -69,7 +69,7 @@ PlantillaCotizacion // Saved template with metadata and datos
 ### Localization
 
 - Language: Spanish
-- Currency: CLP (Chilean Pesos) with 19% IVA
+- Currency: COP (Colombian Pesos) with 19% IVA
 - Date format: dd/mm/yyyy
 
 ## Key Files

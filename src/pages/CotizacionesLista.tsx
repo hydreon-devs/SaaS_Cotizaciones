@@ -531,9 +531,9 @@ const CotizacionesLista = () => {
           <DialogHeader>
             <DialogTitle>Eliminar Cotización</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que querés eliminar la cotización{" "}
+              ¿Estás seguro de que quieres eliminar la cotización del cliente{" "}
               <span className="font-semibold text-foreground">
-                {cotizacionAEliminar?.numero}
+                {cotizacionAEliminar?.cliente}
               </span>
               ? Esta acción no se puede deshacer.
             </DialogDescription>

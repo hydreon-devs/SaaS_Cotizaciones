@@ -31,6 +31,7 @@ import {
 import { PlantillaCotizacion } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
 import { toast } from "sonner";
+import { CotizacionesService } from "@/services/cotizacionesService";
 
 /* ─── Icon map ──────────────────────────────────────────────────── */
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -51,6 +52,9 @@ const Plantillas = () => {
   const [nombreEditar, setNombreEditar] = useState("");
   const [descripcionEditar, setDescripcionEditar] = useState("");
   const [eliminandoId, setEliminandoId] = useState<string | null>(null);
+  const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [plantillaAEliminar, setPlantillaAEliminar] = useState<PlantillaCotizacion | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     cargarPlantillas();
@@ -68,6 +72,41 @@ const Plantillas = () => {
       setCargando(false);
     }
   };
+  const handleClickEliminar = (plantilla: PlantillaCotizacion, e: React.MouseEvent) => {
+   e.stopPropagation();
+   setPlantillaAEliminar(plantilla);
+   setDialogEliminarAbierto(true);
+ };
+
+ const handleConfirmarEliminar = async () => {
+   if (!plantillaAEliminar) return;
+
+   try {
+     setEliminando(true);
+     await PlantillasService.eliminar(plantillaAEliminar.id);
+
+     setDialogEliminarAbierto(false);
+     setEliminandoId(plantillaAEliminar.id);
+
+     setTimeout(() => {
+       setPlantillas((prev) => prev.filter((c) => c.id !== plantillaAEliminar.id));
+       setPlantillaAEliminar(null);
+       setEliminandoId(null);
+       toast.success("Plantilla eliminada correctamente");
+     }, 300);
+   } catch (error) {
+     toast.error("Error al eliminar la plantilla");
+     console.error(error);
+   } finally {
+     setEliminando(false);
+   }
+ };
+
+ const handleCancelarEliminar = () => {
+   setDialogEliminarAbierto(false);
+   setPlantillaAEliminar(null);
+ };
+
 
   const handleSeleccionarPlantilla = (plantilla: PlantillaCotizacion) => {
     navigate("/nueva", { state: { plantilla: plantilla.datos } });
@@ -101,23 +140,6 @@ const Plantillas = () => {
     } catch (error) {
       toast.error("Error al actualizar la plantilla");
     }
-  };
-
-  const handleEliminarPlantilla = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEliminandoId(id);
-
-    setTimeout(async () => {
-      try {
-        await PlantillasService.eliminar(id);
-        await cargarPlantillas();
-        toast.success("Plantilla eliminada correctamente");
-      } catch (error) {
-        toast.error("Error al eliminar la plantilla");
-      } finally {
-        setEliminandoId(null);
-      }
-    }, 300);
   };
 
   const formatCurrency = (amount: number) => {
@@ -323,7 +345,7 @@ const Plantillas = () => {
                             variant="ghost"
                             size="sm"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => handleEliminarPlantilla(plantilla.id, e)}
+                            onClick={(e) => handleClickEliminar(plantilla, e)}
                             disabled={isEliminating}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -376,6 +398,45 @@ const Plantillas = () => {
               Cancelar
             </Button>
             <Button onClick={handleGuardarEdicion}>Guardar Cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete dialog ───────────────────────────────────────── */}
+      <Dialog open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminar Plantilla</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que querés eliminar la plantilla{" "}
+              <span className="font-semibold text-foreground">
+                {plantillaAEliminar?.nombre}
+              </span>
+              ? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleCancelarEliminar}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando…
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

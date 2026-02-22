@@ -1,7 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Building2, Heart, Presentation, PartyPopper, Rocket, FileText, Check, Trash2, Edit, User, Loader2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Building2,
+  Heart,
+  Presentation,
+  PartyPopper,
+  Rocket,
+  FileText,
+  Check,
+  Trash2,
+  Edit,
+  User,
+  Loader2,
+  Plus,
+  ArrowRight,
+  LayoutTemplate,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,15 +32,15 @@ import { PlantillaCotizacion } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
 import { toast } from "sonner";
 
-const iconMap: Record<string, React.ReactNode> = {
-  Building2: <Building2 className="h-8 w-8" />,
-  Heart: <Heart className="h-8 w-8" />,
-  Presentation: <Presentation className="h-8 w-8" />,
-  PartyPopper: <PartyPopper className="h-8 w-8" />,
-  Rocket: <Rocket className="h-8 w-8" />,
-  FileText: <FileText className="h-8 w-8" />,
+/* ─── Icon map ──────────────────────────────────────────────────── */
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Building2,
+  Heart,
+  Presentation,
+  PartyPopper,
+  Rocket,
+  FileText,
 };
-
 
 const Plantillas = () => {
   const navigate = useNavigate();
@@ -38,7 +52,6 @@ const Plantillas = () => {
   const [descripcionEditar, setDescripcionEditar] = useState("");
   const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
-  // Cargar plantillas desde Supabase al montar el componente
   useEffect(() => {
     cargarPlantillas();
   }, []);
@@ -57,7 +70,6 @@ const Plantillas = () => {
   };
 
   const handleSeleccionarPlantilla = (plantilla: PlantillaCotizacion) => {
-    // Navegar a /nueva con los datos de la plantilla
     navigate("/nueva", { state: { plantilla: plantilla.datos } });
   };
 
@@ -93,10 +105,8 @@ const Plantillas = () => {
 
   const handleEliminarPlantilla = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Trigger exit animation
     setEliminandoId(id);
 
-    // Wait for animation to complete before actually deleting
     setTimeout(async () => {
       try {
         await PlantillasService.eliminar(id);
@@ -119,170 +129,229 @@ const Plantillas = () => {
   };
 
   const calcularTotal = (plantilla: PlantillaCotizacion) => {
-    const subtotal = plantilla.datos.productos.reduce(
+    return plantilla.datos.productos.reduce(
       (acc, p) => acc + p.cantidad * p.precioUnitario,
       0
     );
-    return subtotal;
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground animate-fade-in">
-          Plantillas de Cotización
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1 animate-fade-in [animation-delay:100ms]">
-          Selecciona una plantilla para comenzar rápidamente con tu cotización
-        </p>
+    <div className="space-y-6">
+
+      {/* ── Page header ───────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Plantillas de Cotización
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Seleccioná una plantilla para comenzar rápidamente
+          </p>
+        </div>
+        <Button
+          className="shrink-0 gap-2"
+          onClick={() => navigate("/nueva")}
+        >
+          <Plus className="h-4 w-4" />
+          Nueva Cotización
+        </Button>
       </div>
 
-        {cargando ? (
-          <div className="text-center py-12">
-            <Loader2 className="h-16 w-16 mx-auto text-muted-foreground mb-4 animate-spin" />
-            <p className="text-sm text-muted-foreground">Cargando plantillas...</p>
+      {/* ── Content ───────────────────────────────────────────────── */}
+      {cargando ? (
+        <div className="rounded-xl border bg-card flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">Cargando plantillas…</p>
+        </div>
+
+      ) : plantillas.length === 0 ? (
+        /* ── Empty state ──────────────────────────────────────────── */
+        <div className="rounded-xl border bg-card flex flex-col items-center justify-center py-24 gap-5 text-center animate-fade-in">
+          <div
+            className="h-20 w-20 rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: "hsl(217 91% 60% / 0.08)" }}
+          >
+            <LayoutTemplate className="h-9 w-9 text-primary" />
           </div>
-        ) : plantillas.length === 0 ? (
-          <div className="text-center py-12 animate-fade-in">
-            <div className="animate-float">
-              <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2 animate-fade-in [animation-delay:200ms]">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">
               No hay plantillas guardadas
             </h2>
-            <p className="text-sm text-muted-foreground mb-6 animate-fade-in [animation-delay:400ms]">
-              Crea tu primera plantilla desde el cotizador
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Creá una cotización y guardala como plantilla para reutilizarla
             </p>
-            <div className="animate-fade-in [animation-delay:600ms]">
-              <Button onClick={() => navigate("/nueva")} className="group">
-                <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
-                Crear Nueva Cotización
-              </Button>
-            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {plantillas.map((plantilla, index) => (
-            <Card
-              key={plantilla.id}
-              className={`
-                cursor-pointer group
-                transition-all duration-300 ease-out
-                hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1
-                animate-scale-in opacity-0
-                ${eliminandoId === plantilla.id ? 'animate-slide-out-right' : ''}
-              `}
-              style={{
-                animationDelay: `${index * 75}ms`,
-                animationFillMode: 'forwards'
-              }}
-              onClick={() => handleSeleccionarPlantilla(plantilla)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div
-                    className={`${plantilla.color} text-white p-3 rounded-lg group-hover:scale-110 transition-transform`}
-                  >
-                    {iconMap[plantilla.icono]}
-                  </div>
-                  {plantilla.datos.descuento > 0 && (
-                    <span className="bg-accent text-accent-foreground text-xs px-2 py-1 rounded-full font-medium">
-                      -{plantilla.datos.descuento}% desc.
-                    </span>
-                  )}
-                </div>
-                <CardTitle className="text-lg mt-3">{plantilla.nombre}</CardTitle>
-                <CardDescription className="text-sm">
-                  {plantilla.descripcion}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {plantilla.datos.productos.length > 0 ? (
-                  <div className="space-y-3">
-                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                      Incluye:
-                    </div>
-                    <ul className="space-y-1.5">
-                      {plantilla.datos.productos.slice(0, 3).map((producto, idx) => (
-                        <li
-                          key={producto.id}
-                          className="flex items-center gap-2 text-sm text-foreground transition-transform duration-200 group-hover:translate-x-1"
-                          style={{ transitionDelay: `${idx * 50}ms` }}
-                        >
-                          <Check className="h-3.5 w-3.5 text-primary flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                          <span className="truncate">{producto.descripcion}</span>
-                        </li>
-                      ))}
-                      {plantilla.datos.productos.length > 3 && (
-                        <li className="text-xs text-muted-foreground pl-5">
-                          +{plantilla.datos.productos.length - 3} más
-                        </li>
-                      )}
-                    </ul>
-                    <div className="pt-3 border-t border-border space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-muted-foreground">Valor base:</span>
-                        <span className="font-semibold text-primary">
-                          {formatCurrency(calcularTotal(plantilla))}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <User className="h-3 w-3" />
-                        <span>Creada por: {plantilla.autor}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="py-4 text-center text-sm text-muted-foreground">
-                      Comienza con una cotización vacía
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-center">
-                      <User className="h-3 w-3" />
-                      <span>Creada por: {plantilla.autor}</span>
-                    </div>
-                  </div>
-                )}
-                <div className="mt-4 pt-3 border-t border-border flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    onClick={(e) => handleAbrirEditar(plantilla, e)}
-                  >
-                    <Edit className="h-3.5 w-3.5 sm:mr-1 transition-transform duration-200 group-hover:rotate-12" />
-                    <span className="hidden sm:inline">Editar</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-destructive hover:text-destructive transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] hover:bg-destructive/10"
-                    onClick={(e) => handleEliminarPlantilla(plantilla.id, e)}
-                    disabled={eliminandoId === plantilla.id}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 sm:mr-1 transition-transform duration-200 hover:rotate-12" />
-                    <span className="hidden sm:inline">Eliminar</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <Button onClick={() => navigate("/nueva")} className="gap-2 mt-1">
+            <Plus className="h-4 w-4" />
+            Crear Nueva Cotización
+          </Button>
         </div>
+
+      ) : (
+        <>
+          {/* ── Stat horizontal ─────────────────────────────────── */}
+          <div className="flex items-center gap-2 px-1">
+            <LayoutTemplate className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-sm text-muted-foreground">Total</span>
+            <span className="text-sm font-semibold text-foreground tabular-nums">
+              {plantillas.length}
+            </span>
+          </div>
+
+          {/* ── Grid ────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {plantillas.map((plantilla, index) => {
+              const Icon = iconMap[plantilla.icono] ?? FileText;
+              const total = calcularTotal(plantilla);
+              const isEliminating = eliminandoId === plantilla.id;
+
+              return (
+                <div
+                  key={plantilla.id}
+                  onClick={() => handleSeleccionarPlantilla(plantilla)}
+                  className={`
+                    group relative rounded-xl border bg-card overflow-hidden
+                    cursor-pointer
+                    transition-all duration-200
+                    hover:shadow-md hover:shadow-primary/8 hover:border-primary/40 hover:-translate-y-0.5
+                    animate-scale-in opacity-0
+                    ${isEliminating ? "animate-slide-out-right !opacity-100" : ""}
+                  `}
+                  style={{
+                    animationDelay: `${index * 60}ms`,
+                    animationFillMode: "forwards",
+                  }}
+                >
+                  {/* Top accent line */}
+                  <div className="h-0.5 w-full bg-border group-hover:bg-primary transition-colors duration-200" />
+
+                  <div className="p-5 space-y-4">
+
+                    {/* ── Card header ─────────────────────────── */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-primary/15">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold text-foreground leading-snug truncate">
+                            {plantilla.nombre}
+                          </h3>
+                          {plantilla.descripcion && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                              {plantilla.descripcion}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {plantilla.datos.descuento > 0 && (
+                        <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                          -{plantilla.datos.descuento}%
+                        </span>
+                      )}
+                    </div>
+
+                    {/* ── Products list ───────────────────────── */}
+                    {plantilla.datos.productos.length > 0 ? (
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+                          Incluye
+                        </span>
+                        <ul className="space-y-1.5">
+                          {plantilla.datos.productos.slice(0, 3).map((producto, idx) => (
+                            <li
+                              key={producto.id}
+                              className="flex items-center gap-2 text-xs text-foreground transition-transform duration-150 group-hover:translate-x-0.5"
+                              style={{ transitionDelay: `${idx * 30}ms` }}
+                            >
+                              <Check className="h-3 w-3 text-primary shrink-0" />
+                              <span className="truncate">{producto.descripcion}</span>
+                            </li>
+                          ))}
+                          {plantilla.datos.productos.length > 3 && (
+                            <li className="text-xs text-muted-foreground pl-5">
+                              +{plantilla.datos.productos.length - 3} más
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">
+                        Comienza con una cotización vacía
+                      </p>
+                    )}
+
+                    {/* ── Footer ──────────────────────────────── */}
+                    <div className="pt-3 border-t border-border space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        {total > 0 ? (
+                          <span className="text-sm font-semibold text-primary tabular-nums">
+                            {formatCurrency(total)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sin precio base</span>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <User className="h-3 w-3 shrink-0" />
+                          <span className="truncate max-w-[100px]">{plantilla.autor}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions row */}
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Usar plantilla hint */}
+                        <span className="flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          Usar plantilla
+                          <ArrowRight className="h-3 w-3" />
+                        </span>
+
+                        {/* Edit / Delete */}
+                        <div
+                          className="flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={(e) => handleAbrirEditar(plantilla, e)}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => handleEliminarPlantilla(plantilla.id, e)}
+                            disabled={isEliminating}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
-      {/* Diálogo para editar plantilla */}
+      {/* ── Edit dialog ──────────────────────────────────────────── */}
       <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Editar Plantilla</DialogTitle>
             <DialogDescription>
-              Modifica los detalles de la plantilla.
+              Modificá los detalles de la plantilla.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="nombre-editar">
-                Nombre de la plantilla <span className="text-destructive">*</span>
+                Nombre <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="nombre-editar"

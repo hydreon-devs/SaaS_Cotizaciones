@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2, Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -57,6 +56,21 @@ const formatCurrency = (amount: number | null) => {
   }).format(amount ?? 0);
 };
 
+const EstadoBadge = ({ estado }: { estado: string | null }) => {
+  if (estado === "activo") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success border border-success/20">
+        Activo
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
+      {estado ?? "—"}
+    </span>
+  );
+};
+
 const Productos = () => {
   const [productos, setProductos] = useState<ProductoServicio[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
@@ -82,7 +96,7 @@ const Productos = () => {
   const [estadoEditar, setEstadoEditar] = useState("activo");
 
   const serviciosMap = useMemo(() => {
-    return new Map(servicios.map((servicio) => [servicio.id, servicio.nombre ?? ""]));
+    return new Map(servicios.map((s) => [s.id, s.nombre ?? ""]));
   }, [servicios]);
 
   const cargarDatos = async () => {
@@ -123,7 +137,7 @@ const Productos = () => {
 
   const handleCrear = async () => {
     if (!idServicio) {
-      toast.error("Selecciona un servicio");
+      toast.error("Seleccioná un servicio");
       return;
     }
     if (!nombre.trim()) {
@@ -150,9 +164,7 @@ const Productos = () => {
       await cargarDatos();
     } catch (errorCrear) {
       const mensaje =
-        errorCrear instanceof Error
-          ? errorCrear.message
-          : "No se pudo crear el producto";
+        errorCrear instanceof Error ? errorCrear.message : "No se pudo crear el producto";
       toast.error(mensaje);
     }
   };
@@ -170,7 +182,7 @@ const Productos = () => {
   const handleGuardarEdicion = async () => {
     if (!productoEditando) return;
     if (!idServicioEditar) {
-      toast.error("Selecciona un servicio");
+      toast.error("Seleccioná un servicio");
       return;
     }
     if (!nombreEditar.trim()) {
@@ -195,7 +207,7 @@ const Productos = () => {
       toast.success("Producto actualizado correctamente");
       setDialogEditarAbierto(false);
       await cargarDatos();
-    } catch (errorActualizar) {
+    } catch {
       toast.error("No se pudo actualizar el producto");
     }
   };
@@ -223,199 +235,247 @@ const Productos = () => {
   };
 
   return (
-    <div className="bg-background">
-      <main className="">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground animate-fade-in">
-            Productos
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1 animate-fade-in [animation-delay:100ms]">
-            Gestiona los productos asociados a cada servicio
-          </p>
+    <div className="space-y-6">
+
+      {/* ── Page header ───────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Productos
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Gestioná los productos asociados a cada servicio
+        </p>
+      </div>
+
+      {/* ── Stat line ─────────────────────────────────────────────── */}
+      {!cargando && productos.length > 0 && (
+        <div className="flex items-center gap-2 px-1">
+          <Package className="h-4 w-4 text-primary shrink-0" />
+          <span className="text-sm text-muted-foreground">Total</span>
+          <span className="text-sm font-semibold text-foreground tabular-nums">
+            {productos.length}
+          </span>
+        </div>
+      )}
+
+      {/* ── Two-column layout ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        {/* ── Create form ─────────────────────────────────────────── */}
+        <div className="md:col-span-1 rounded-xl border bg-card overflow-hidden">
+          <div className="h-0.5 w-full bg-primary" />
+          <div className="p-5 space-y-4">
+            <p className="text-sm font-medium text-foreground">Nuevo producto</p>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Servicio <span className="text-destructive">*</span>
+              </Label>
+              <Select value={idServicio} onValueChange={setIdServicio}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Seleccioná un servicio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {servicios.length === 0 ? (
+                    <SelectItem value="sin-servicios" disabled>
+                      No hay servicios disponibles
+                    </SelectItem>
+                  ) : (
+                    servicios.map((s) => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.nombre ?? "Servicio sin nombre"}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="nombre-producto" className="text-xs text-muted-foreground">
+                Nombre <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="nombre-producto"
+                className="h-9"
+                placeholder="Ej: Canapé gourmet"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="descripcion-producto" className="text-xs text-muted-foreground">
+                Descripción
+              </Label>
+              <Textarea
+                id="descripcion-producto"
+                placeholder="Describe el producto"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                rows={3}
+                className="resize-none text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="precio-producto" className="text-xs text-muted-foreground">
+                Precio
+              </Label>
+              <Input
+                id="precio-producto"
+                type="number"
+                className="h-9"
+                placeholder="0"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Estado</Label>
+              <Select value={estado} onValueChange={setEstado}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Seleccioná un estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {estadosDisponibles.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button className="w-full gap-2" onClick={handleCrear}>
+              <Plus className="h-4 w-4" />
+              Crear producto
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <Card className="md:col-span-1 animate-fade-in [animation-delay:100ms]">
-            <CardHeader>
-              <CardTitle className="text-base">Crear producto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Servicio</Label>
-                <Select value={idServicio} onValueChange={setIdServicio}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un servicio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {servicios.length === 0 ? (
-                      <SelectItem value="sin-servicios" disabled>
-                        No hay servicios disponibles
-                      </SelectItem>
-                    ) : (
-                      servicios.map((servicio) => (
-                        <SelectItem key={servicio.id} value={String(servicio.id)}>
-                          {servicio.nombre ?? "Servicio sin nombre"}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nombre-producto">Nombre</Label>
-                <Input
-                  id="nombre-producto"
-                  placeholder="Ej: Canapé gourmet"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="descripcion-producto">Descripción</Label>
-                <Textarea
-                  id="descripcion-producto"
-                  placeholder="Describe el producto"
-                  value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="precio-producto">Precio</Label>
-                <Input
-                  id="precio-producto"
-                  type="number"
-                  placeholder="0"
-                  value={precio}
-                  onChange={(e) => setPrecio(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Estado</Label>
-                <Select value={estado} onValueChange={setEstado}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {estadosDisponibles.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full group" onClick={handleCrear}>
-                <span className="transition-transform duration-200 group-hover:rotate-90">+</span>
-                Crear producto
-              </Button>
-            </CardContent>
-          </Card>
+        {/* ── Table panel ─────────────────────────────────────────── */}
+        <div className="md:col-span-2 rounded-xl border bg-card overflow-hidden">
+          <div className="overflow-auto max-h-[calc(100vh-280px)]">
+            <Table className="min-w-[700px]">
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow className="hover:bg-transparent border-b">
+                  <TableHead className="pl-4 text-xs uppercase tracking-wider text-muted-foreground font-medium bg-card">
+                    Producto
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-medium bg-card">
+                    Servicio
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-medium bg-card">
+                    Precio
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-medium bg-card">
+                    Estado
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-medium bg-card">
+                    Creado
+                  </TableHead>
+                  <TableHead className="w-16 bg-card" />
+                </TableRow>
+              </TableHeader>
 
-          <Card className="md:col-span-2 animate-fade-in [animation-delay:200ms]">
-            <CardHeader>
-              <CardTitle className="text-base">Listado de productos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-lg overflow-auto max-h-[calc(100vh-280px)]">
-                <Table className="min-w-[700px]">
-                  <TableHeader className="sticky top-0 z-10">
-                    <TableRow className="bg-muted/50 [&>th]:bg-muted/95 [&>th]:backdrop-blur-sm">
-                      <TableHead>Producto</TableHead>
-                      <TableHead>Servicio</TableHead>
-                      <TableHead>Precio</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Creado</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cargando ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                          <span className="inline-flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Cargando productos...
+              <TableBody>
+                {cargando ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando productos…
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-sm text-destructive">
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : productos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-sm text-muted-foreground">
+                      No hay productos registrados
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  productos.map((producto, index) => (
+                    <TableRow
+                      key={producto.id}
+                      className="group border-b last:border-0 hover:bg-muted/40 transition-colors duration-150 animate-fade-in opacity-0"
+                      style={{
+                        animationDelay: `${index * 40}ms`,
+                        animationFillMode: "forwards",
+                      }}
+                    >
+                      <TableCell className="pl-4">
+                        <span className="text-sm font-medium text-foreground block">
+                          {producto.nombre ?? "Sin nombre"}
+                        </span>
+                        {producto.descripcion && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[160px] block">
+                            {producto.descripcion}
                           </span>
-                        </TableCell>
-                      </TableRow>
-                    ) : error ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-destructive">
-                          {error}
-                        </TableCell>
-                      </TableRow>
-                    ) : productos.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                          No hay productos registrados
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      productos.map((producto, index) => (
-                        <TableRow
-                          key={producto.id}
-                          className="transition-all duration-200 ease-out hover:bg-primary/5 animate-fade-in opacity-0"
-                          style={{
-                            animationDelay: `${index * 50}ms`,
-                            animationFillMode: 'forwards'
-                          }}
-                        >
-                          <TableCell className="font-medium">
-                            {producto.nombre ?? "Sin nombre"}
-                            {producto.descripcion && (
-                              <div className="text-xs text-muted-foreground">
-                                {producto.descripcion}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {serviciosMap.get(producto.id_servicio) || "Sin servicio"}
-                          </TableCell>
-                          <TableCell>{formatCurrency(producto.precio)}</TableCell>
-                          <TableCell className="text-sm">{producto.estado ?? "-"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {formatDate(producto.created_at)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 transition-all duration-200 hover:scale-110 active:scale-95"
-                                onClick={() => handleAbrirEditar(producto)}
-                                title="Editar"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-destructive/10"
-                                onClick={() => handleClickEliminar(producto)}
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {serviciosMap.get(producto.id_servicio) || "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium tabular-nums text-foreground">
+                          {formatCurrency(producto.precio)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <EstadoBadge estado={producto.estado} />
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm tabular-nums text-muted-foreground">
+                          {formatDate(producto.created_at)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="pr-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleAbrirEditar(producto)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleClickEliminar(producto)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </main>
+      </div>
 
+      {/* ── Delete dialog ─────────────────────────────────────────── */}
       <Dialog open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Eliminar Producto</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar el producto{" "}
+              ¿Estás seguro de que querés eliminar el producto{" "}
               <span className="font-semibold text-foreground">
                 {productoAEliminar?.nombre ?? "sin nombre"}
               </span>
@@ -430,15 +490,11 @@ const Productos = () => {
             >
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmarEliminar}
-              disabled={eliminando}
-            >
+            <Button variant="destructive" onClick={handleConfirmarEliminar} disabled={eliminando}>
               {eliminando ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Eliminando...
+                  Eliminando…
                 </>
               ) : (
                 "Eliminar"
@@ -448,12 +504,13 @@ const Productos = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ── Edit dialog ───────────────────────────────────────────── */}
       <Dialog open={dialogEditarAbierto} onOpenChange={setDialogEditarAbierto}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Editar producto</DialogTitle>
             <DialogDescription>
-              Actualiza la información del producto seleccionado.
+              Actualizá la información del producto seleccionado.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -461,7 +518,7 @@ const Productos = () => {
               <Label>Servicio</Label>
               <Select value={idServicioEditar} onValueChange={setIdServicioEditar}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un servicio" />
+                  <SelectValue placeholder="Seleccioná un servicio" />
                 </SelectTrigger>
                 <SelectContent>
                   {servicios.length === 0 ? (
@@ -469,9 +526,9 @@ const Productos = () => {
                       No hay servicios disponibles
                     </SelectItem>
                   ) : (
-                    servicios.map((servicio) => (
-                      <SelectItem key={servicio.id} value={String(servicio.id)}>
-                        {servicio.nombre ?? "Servicio sin nombre"}
+                    servicios.map((s) => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.nombre ?? "Servicio sin nombre"}
                       </SelectItem>
                     ))
                   )}
@@ -511,7 +568,7 @@ const Productos = () => {
               <Label>Estado</Label>
               <Select value={estadoEditar} onValueChange={setEstadoEditar}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un estado" />
+                  <SelectValue placeholder="Seleccioná un estado" />
                 </SelectTrigger>
                 <SelectContent>
                   {estadosDisponibles.map((item) => (

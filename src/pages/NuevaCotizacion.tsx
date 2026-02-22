@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { Plus, Trash2, Download, Save, Loader2, RotateCcw } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Download,
+  Save,
+  Loader2,
+  RotateCcw,
+  FileText,
+  Package,
+} from "lucide-react";
 import VistaPrevia from "@/components/VistaPrevia";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatosCotizacion, Producto, ProductoServicio, Servicio } from "@/types/cotizacion";
 import { PlantillasService } from "@/services/plantillasService";
 import { crearCotizacion } from "@/services/cotizacionesService";
@@ -66,17 +74,10 @@ const NuevaCotizacion = () => {
             ? Number(p.id)
             : null;
 
-      return {
-        ...p,
-        id: `${Date.now()}-${index}`,
-        productoId,
-      };
+      return { ...p, id: `${Date.now()}-${index}`, productoId };
     });
 
-    setDatos({
-      ...dataBase,
-      productos,
-    });
+    setDatos({ ...dataBase, productos });
 
     if (cotizacionData) {
       toast.success("Cotización cargada correctamente");
@@ -101,15 +102,18 @@ const NuevaCotizacion = () => {
     setDatos((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleToggleIva = useCallback((habilitado: boolean) => {
-    if (!habilitado) {
-      ivaGuardadoRef.current = datos.iva ?? 19;
-      setDatos((prev) => ({ ...prev, iva: 0 }));
-    } else {
-      setDatos((prev) => ({ ...prev, iva: ivaGuardadoRef.current }));
-    }
-    setIvaHabilitado(habilitado);
-  }, [datos.iva]);
+  const handleToggleIva = useCallback(
+    (habilitado: boolean) => {
+      if (!habilitado) {
+        ivaGuardadoRef.current = datos.iva ?? 19;
+        setDatos((prev) => ({ ...prev, iva: 0 }));
+      } else {
+        setDatos((prev) => ({ ...prev, iva: ivaGuardadoRef.current }));
+      }
+      setIvaHabilitado(habilitado);
+    },
+    [datos.iva]
+  );
 
   useEffect(() => {
     let activo = true;
@@ -130,10 +134,7 @@ const NuevaCotizacion = () => {
     };
 
     cargarServicios();
-
-    return () => {
-      activo = false;
-    };
+    return () => { activo = false; };
   }, []);
 
   useEffect(() => {
@@ -160,23 +161,16 @@ const NuevaCotizacion = () => {
     };
 
     cargarProductos();
-
-    return () => {
-      activo = false;
-    };
+    return () => { activo = false; };
   }, [servicioSeleccionado]);
 
   const handleAgregarProducto = (producto: ProductoServicio) => {
     const productoId = String(producto.id);
     const nombreServicio =
-      servicios.find((servicio) => servicio.id === producto.id_servicio)?.nombre ||
-      "Servicio";
+      servicios.find((s) => s.id === producto.id_servicio)?.nombre || "Servicio";
 
     setDatos((prev) => {
-      const existe = prev.productos.some((item) => item.productoId === producto.id);
-      if (existe) {
-        return prev;
-      }
+      if (prev.productos.some((item) => item.productoId === producto.id)) return prev;
 
       const nuevoProducto: Producto = {
         id: productoId,
@@ -189,10 +183,7 @@ const NuevaCotizacion = () => {
         descripcionProducto: producto.descripcion ?? null,
       };
 
-      return {
-        ...prev,
-        productos: [...prev.productos, nuevoProducto],
-      };
+      return { ...prev, productos: [...prev.productos, nuevoProducto] };
     });
 
     toast.success("Producto agregado");
@@ -207,29 +198,20 @@ const NuevaCotizacion = () => {
     setDatos((prev) => {
       const existentes = new Set(prev.productos.map((item) => item.productoId).filter(Boolean));
       const nuevos = productosServicio
-        .filter((producto) => !existentes.has(producto.id))
-        .map((producto) => {
-          const nombreServicio =
-            servicios.find((servicio) => servicio.id === producto.id_servicio)?.nombre ||
-            "Servicio";
-          return {
-            id: String(producto.id),
-            descripcion: producto.nombre || "Producto sin nombre",
-            cantidad: 1,
-            precioUnitario: producto.precio ?? 0,
-            productoId: producto.id,
-            servicioId: producto.id_servicio,
-            nombreServicio,
-            descripcionProducto: producto.descripcion ?? null,
-          };
-        });
+        .filter((p) => !existentes.has(p.id))
+        .map((p) => ({
+          id: String(p.id),
+          descripcion: p.nombre || "Producto sin nombre",
+          cantidad: 1,
+          precioUnitario: p.precio ?? 0,
+          productoId: p.id,
+          servicioId: p.id_servicio,
+          nombreServicio: servicios.find((s) => s.id === p.id_servicio)?.nombre || "Servicio",
+          descripcionProducto: p.descripcion ?? null,
+        }));
 
       if (nuevos.length === 0) return prev;
-
-      return {
-        ...prev,
-        productos: [...prev.productos, ...nuevos],
-      };
+      return { ...prev, productos: [...prev.productos, ...nuevos] };
     });
 
     toast.success("Productos agregados");
@@ -254,11 +236,11 @@ const NuevaCotizacion = () => {
 
   const handleGuardarCotizacion = async () => {
     if (!datos.cliente) {
-      toast.error("Ingresa el nombre del cliente");
+      toast.error("Ingresá el nombre del cliente");
       return;
     }
     if (datos.productos.length === 0) {
-      toast.error("Agrega al menos un producto");
+      toast.error("Agregá al menos un producto");
       return;
     }
     try {
@@ -276,7 +258,7 @@ const NuevaCotizacion = () => {
 
   const handleAbrirDialogoPlantilla = () => {
     if (datos.productos.length === 0) {
-      toast.error("Agrega al menos un producto antes de guardar como plantilla");
+      toast.error("Agregá al menos un producto antes de guardar como plantilla");
       return;
     }
     setDialogPlantillaAbierto(true);
@@ -284,7 +266,7 @@ const NuevaCotizacion = () => {
 
   const handleGuardarComoPlantilla = async () => {
     if (!nombrePlantilla.trim()) {
-      toast.error("Ingresa un nombre para la plantilla");
+      toast.error("Ingresá un nombre para la plantilla");
       return;
     }
 
@@ -294,11 +276,10 @@ const NuevaCotizacion = () => {
         nombrePlantilla,
         descripcionPlantilla,
         datos,
-        user?.name || "Usuario", // Usar el nombre del usuario logueado
+        user?.name || "Usuario",
         "FileText",
         "bg-blue-500"
       );
-
       toast.success("Plantilla guardada exitosamente");
       setDialogPlantillaAbierto(false);
       setNombrePlantilla("");
@@ -352,72 +333,84 @@ const NuevaCotizacion = () => {
   };
 
   return (
-    <div>
-        <div className="mb-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Generador de cotizaciones</h1>
-            <p className="text-sm text-muted-foreground">
-              Crea cotizaciones de manera rápida y sencilla
-            </p>
-          </div>
-          <div className="mt-2 flex justify-end">
-            <Button
-              onClick={handleLimpiarDatos}
-              className="w-full sm:w-auto"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Limpiar datos
-            </Button>
-          </div>
+    <div className="space-y-6">
+
+      {/* ── Page header ───────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Nueva Cotización
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Completá los datos y agregá productos para generar la cotización
+          </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLimpiarDatos}
+          className="shrink-0 gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Limpiar
+        </Button>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Formulario */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Información de cotización</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Cliente / Empresa
-                    </label>
-                    <Input
-                      placeholder="Ingrese nombre completo"
-                      value={datos.cliente}
-                      onChange={(e) => handleInputChange("cliente", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Evento</label>
-                    <Input
-                      placeholder="Nombre del evento"
-                      value={datos.evento}
-                      onChange={(e) => handleInputChange("evento", e.target.value)}
-                    />
-                  </div>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
-                    Consideraciones (una por línea)
-                  </label>
-                  <Textarea
-                    placeholder="Consideraciones"
-                    value={datos.consideraciones}
-                    onChange={(e) => handleInputChange("consideraciones", e.target.value)}
-                    rows={3}
+        {/* ── Left column: forms ────────────────────────────────── */}
+        <div className="space-y-5">
+
+          {/* ── Info panel ────────────────────────────────────────── */}
+          <div className="rounded-xl border bg-card overflow-hidden">
+            <div className="h-0.5 w-full bg-primary" />
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <p className="text-sm font-medium text-foreground">Información de la cotización</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Cliente / Empresa</label>
+                  <Input
+                    className="h-9"
+                    placeholder="Nombre completo o razón social"
+                    value={datos.cliente}
+                    onChange={(e) => handleInputChange("cliente", e.target.value)}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Evento</label>
+                  <Input
+                    className="h-9"
+                    placeholder="Nombre del evento"
+                    value={datos.evento}
+                    onChange={(e) => handleInputChange("evento", e.target.value)}
+                  />
+                </div>
+              </div>
 
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
-                    Descuento (%)
-                  </label>
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">
+                  Consideraciones <span className="text-muted-foreground/60">(una por línea)</span>
+                </label>
+                <Textarea
+                  className="resize-none text-sm"
+                  placeholder="Ingresá las consideraciones del servicio…"
+                  value={datos.consideraciones}
+                  onChange={(e) => handleInputChange("consideraciones", e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Descuento */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Descuento (%)</label>
                   <Input
                     type="number"
+                    className="h-9"
                     placeholder="0"
                     min="0"
                     max="100"
@@ -426,177 +419,219 @@ const NuevaCotizacion = () => {
                   />
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
+                {/* IVA */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between h-4">
                     <label className="text-xs text-muted-foreground">IVA (%)</label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {ivaHabilitado ? "Habilitado" : "Deshabilitado"}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">
+                        {ivaHabilitado ? "On" : "Off"}
                       </span>
-                      <Switch checked={ivaHabilitado} onCheckedChange={handleToggleIva} />
+                      <Switch
+                        checked={ivaHabilitado}
+                        onCheckedChange={handleToggleIva}
+                        className="scale-75 origin-right"
+                      />
                     </div>
                   </div>
                   <Input
                     type="number"
+                    className={`h-9 ${!ivaHabilitado ? "opacity-40 cursor-not-allowed" : ""}`}
                     placeholder="19"
                     min="0"
                     max="100"
                     disabled={!ivaHabilitado}
                     value={ivaHabilitado ? (datos.iva ?? 19) : ""}
                     onChange={(e) => handleInputChange("iva", Number(e.target.value))}
-                    className={!ivaHabilitado ? "opacity-40 cursor-not-allowed" : ""}
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Fecha</label>
-                    <Input
-                      type="date"
-                      value={datos.fecha}
-                      onChange={(e) => handleInputChange("fecha", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Nombre del encargado
-                    </label>
-                    <Input
-                      placeholder="Carlos Jaramillo"
-                      value={datos.nombreEncargado}
-                      onChange={(e) => handleInputChange("nombreEncargado", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Cargo</label>
-                    <Input
-                      placeholder="Director general"
-                      value={datos.cargo}
-                      onChange={(e) => handleInputChange("cargo", e.target.value)}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Fecha</label>
+                  <Input
+                    type="date"
+                    className="h-9"
+                    value={datos.fecha}
+                    onChange={(e) => handleInputChange("fecha", e.target.value)}
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Encargado</label>
+                  <Input
+                    className="h-9"
+                    placeholder="Carlos Jaramillo"
+                    value={datos.nombreEncargado}
+                    onChange={(e) => handleInputChange("nombreEncargado", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Cargo</label>
+                  <Input
+                    className="h-9"
+                    placeholder="Director general"
+                    value={datos.cargo}
+                    onChange={(e) => handleInputChange("cargo", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Agregar servicios y productos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Servicio</label>
-                  <Select value={servicioSeleccionado} onValueChange={setServicioSeleccionado}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          cargandoServicios ? "Cargando servicios..." : "Selecciona un servicio"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {servicios.length === 0 && !cargandoServicios ? (
-                        <SelectItem value="sin-servicios" disabled>
-                          No hay servicios disponibles
+          {/* ── Products panel ────────────────────────────────────── */}
+          <div className="rounded-xl border bg-card overflow-hidden">
+            <div className="h-0.5 w-full bg-primary" />
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-primary shrink-0" />
+                <p className="text-sm font-medium text-foreground">Servicios y productos</p>
+              </div>
+
+              {/* Service selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Servicio</label>
+                <Select value={servicioSeleccionado} onValueChange={setServicioSeleccionado}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue
+                      placeholder={
+                        cargandoServicios ? "Cargando servicios…" : "Seleccioná un servicio"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {servicios.length === 0 && !cargandoServicios ? (
+                      <SelectItem value="sin-servicios" disabled>
+                        No hay servicios disponibles
+                      </SelectItem>
+                    ) : (
+                      servicios.map((s) => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          {s.nombre || "Servicio sin nombre"}
                         </SelectItem>
-                      ) : (
-                        servicios.map((servicio) => (
-                          <SelectItem key={servicio.id} value={String(servicio.id)}>
-                            {servicio.nombre || "Servicio sin nombre"}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-                    <span className="text-sm font-medium text-foreground">
-                      Productos del servicio
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAgregarTodos}
-                      disabled={cargandoProductos || productosServicio.length === 0}
-                    >
-                      <Plus className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Agregar todos</span>
-                    </Button>
-                  </div>
-                  <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[400px]">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-3 font-medium">Producto</th>
-                        <th className="text-right p-3 font-medium w-28">Precio</th>
-                        <th className="text-right p-3 font-medium w-32">Acción</th>
-                      </tr>
-                    </thead>
+              {/* Available products table */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Productos disponibles
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={handleAgregarTodos}
+                    disabled={cargandoProductos || productosServicio.length === 0}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Agregar todos
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[380px]">
                     <tbody>
                       {cargandoProductos ? (
                         <tr>
-                          <td className="p-3 text-muted-foreground" colSpan={3}>
-                            Cargando productos...
+                          <td className="px-4 py-6 text-center" colSpan={3}>
+                            <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              Cargando productos…
+                            </span>
                           </td>
                         </tr>
                       ) : productosServicio.length === 0 ? (
                         <tr>
-                          <td className="p-3 text-muted-foreground" colSpan={3}>
-                            Selecciona un servicio para ver productos
+                          <td className="px-4 py-6 text-center text-xs text-muted-foreground" colSpan={3}>
+                            {servicioSeleccionado
+                              ? "Este servicio no tiene productos"
+                              : "Seleccioná un servicio para ver sus productos"}
                           </td>
                         </tr>
                       ) : (
-                        productosServicio.map((producto) => (
-                          <tr key={producto.id} className="border-t border-border">
-                            <td className="p-3">
-                              <div className="font-medium text-foreground">
-                                {producto.nombre || "Producto sin nombre"}
-                              </div>
-                              {producto.descripcion && (
-                                <div className="text-xs text-muted-foreground">
-                                  {producto.descripcion}
-                                </div>
-                              )}
-                            </td>
-                            <td className="p-3 text-right">
-                              {formatCurrency(producto.precio ?? 0)}
-                            </td>
-                            <td className="p-3 text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleAgregarProducto(producto)}
-                              >
-                                Agregar
-                              </Button>
-                            </td>
-                          </tr>
-                        ))
+                        productosServicio.map((producto, index) => {
+                          const yaAgregado = datos.productos.some(
+                            (p) => p.productoId === producto.id
+                          );
+                          return (
+                            <tr
+                              key={producto.id}
+                              className={`group border-t border-border transition-colors duration-150 ${
+                                yaAgregado ? "opacity-40" : "hover:bg-muted/40"
+                              }`}
+                              style={{
+                                animationDelay: `${index * 30}ms`,
+                              }}
+                            >
+                              <td className="px-4 py-2.5">
+                                <span className="text-sm font-medium text-foreground block">
+                                  {producto.nombre || "Producto sin nombre"}
+                                </span>
+                                {producto.descripcion && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {producto.descripcion}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                <span className="text-sm tabular-nums font-medium text-foreground">
+                                  {formatCurrency(producto.precio ?? 0)}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-right w-20">
+                                {!yaAgregado && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                                    onClick={() => handleAgregarProducto(producto)}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Agregar
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
-                  </div>
                 </div>
+              </div>
 
-                {/* Lista de productos agregados */}
-                {datos.productos.length > 0 && (
-                  <div className="border border-border rounded-lg overflow-x-auto">
-                    <table className="w-full text-sm min-w-[400px]">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="text-left p-3 font-medium">Producto</th>
-                          <th className="text-center p-3 font-medium w-20">Cant.</th>
-                          <th className="text-right p-3 font-medium w-24">Total</th>
-                          <th className="w-12"></th>
-                        </tr>
-                      </thead>
+              {/* Added products table */}
+              {datos.productos.length > 0 && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Productos en la cotización
+                    </span>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">
+                      {datos.productos.length}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        {datos.productos.length === 1 ? "ítem" : "ítems"}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[380px]">
                       <tbody>
                         {datos.productos.map((producto) => (
-                          <tr key={producto.id} className="border-t border-border">
-                            <td className="p-3">{producto.descripcion}</td>
-                            <td className="p-3 text-center">
+                          <tr
+                            key={producto.id}
+                            className="group border-t border-border hover:bg-muted/40 transition-colors duration-150"
+                          >
+                            <td className="px-4 py-2.5">
+                              <span className="text-sm text-foreground">
+                                {producto.descripcion}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 w-24">
                               <Input
                                 type="number"
                                 min="1"
@@ -604,20 +639,22 @@ const NuevaCotizacion = () => {
                                 onChange={(e) =>
                                   handleCantidadChange(producto.id, Number(e.target.value))
                                 }
-                                className="w-16 text-center mx-auto"
+                                className="w-16 h-7 text-center text-xs mx-auto"
                               />
                             </td>
-                            <td className="p-3 text-right">
-                              {formatCurrency(producto.cantidad * producto.precioUnitario)}
+                            <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                              <span className="text-sm tabular-nums font-medium text-foreground">
+                                {formatCurrency(producto.cantidad * producto.precioUnitario)}
+                              </span>
                             </td>
-                            <td className="p-3">
+                            <td className="px-3 py-2.5 w-10">
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                                 onClick={() => handleEliminarProducto(producto.id)}
-                                className="text-destructive hover:text-destructive"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </td>
                           </tr>
@@ -625,68 +662,71 @@ const NuevaCotizacion = () => {
                       </tbody>
                     </table>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
 
-          {/* Vista Previa */}
-          <div className="space-y-4">
-            <VistaPrevia ref={vistaPreviaRef} datos={datos} />
-            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+        {/* ── Right column: preview + actions ───────────────────── */}
+        <div className="space-y-4">
+          <VistaPrevia ref={vistaPreviaRef} datos={datos} />
+
+          {/* Action buttons */}
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={handleDescargarWord}
                 disabled={descargandoWord}
-                className="w-full sm:w-auto"
+                className="flex-1 gap-2"
               >
                 {descargandoWord ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4" />
                 )}
-                {descargandoWord ? "Generando..." : "Descargar Cotización"}
+                {descargandoWord ? "Generando…" : "Descargar Word"}
               </Button>
               <Button
                 variant="outline"
                 onClick={handleAbrirDialogoPlantilla}
                 disabled={guardandoPlantilla}
-                className="w-full sm:w-auto"
+                className="flex-1 gap-2"
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4" />
                 Guardar Plantilla
               </Button>
               <Button
                 onClick={handleGuardarCotizacion}
                 disabled={guardandoCotizacion}
-                className="w-full sm:w-auto"
+                className="flex-1 gap-2"
               >
                 {guardandoCotizacion ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Guardando...
-                  </>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Guardar Cotización"
+                  <Save className="h-4 w-4" />
                 )}
+                {guardandoCotizacion ? "Guardando…" : "Guardar Cotización"}
               </Button>
             </div>
           </div>
         </div>
+      </div>
 
-      {/* Diálogo para guardar como plantilla */}
+      {/* ── Save as template dialog ───────────────────────────────── */}
       <Dialog open={dialogPlantillaAbierto} onOpenChange={setDialogPlantillaAbierto}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Guardar como Plantilla</DialogTitle>
             <DialogDescription>
-              Guarda esta configuración como plantilla para usarla en futuras cotizaciones.
+              Guardá esta configuración como plantilla para reutilizarla en futuras cotizaciones.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="nombre-plantilla">
-                Nombre de la plantilla <span className="text-destructive">*</span>
+                Nombre <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="nombre-plantilla"
@@ -699,7 +739,7 @@ const NuevaCotizacion = () => {
               <Label htmlFor="descripcion-plantilla">Descripción (opcional)</Label>
               <Textarea
                 id="descripcion-plantilla"
-                placeholder="Breve descripción de la plantilla..."
+                placeholder="Breve descripción de la plantilla…"
                 value={descripcionPlantilla}
                 onChange={(e) => setDescripcionPlantilla(e.target.value)}
                 rows={3}
@@ -707,14 +747,18 @@ const NuevaCotizacion = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogPlantillaAbierto(false)} disabled={guardandoPlantilla}>
+            <Button
+              variant="outline"
+              onClick={() => setDialogPlantillaAbierto(false)}
+              disabled={guardandoPlantilla}
+            >
               Cancelar
             </Button>
             <Button onClick={handleGuardarComoPlantilla} disabled={guardandoPlantilla}>
               {guardandoPlantilla ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Guardando...
+                  Guardando…
                 </>
               ) : (
                 "Guardar Plantilla"

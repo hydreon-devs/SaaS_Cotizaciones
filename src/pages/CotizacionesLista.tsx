@@ -48,7 +48,6 @@ const CotizacionesLista = () => {
   const [clientes, setClientes] = useState<string[]>([]);
   const [cargando, setCargando] = useState(true);
   const [clienteFilter, setClienteFilter] = useState<string>("todos");
-  const [estadoFilter, setEstadoFilter] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState<string>("");
   const [fechaHasta, setFechaHasta] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,7 +110,6 @@ const CotizacionesLista = () => {
   const filteredData = useMemo(() => {
     return cotizaciones.filter((cot) => {
       if (clienteFilter !== "todos" && cot.cliente !== clienteFilter) return false;
-      if (estadoFilter !== "todos" && cot.estado !== estadoFilter) return false;
 
       const cotFecha = parseFechaCotizacion(cot.fecha);
       if (cotFecha) {
@@ -130,11 +128,11 @@ const CotizacionesLista = () => {
 
       return true;
     });
-  }, [cotizaciones, clienteFilter, estadoFilter, fechaDesde, fechaHasta]);
+  }, [cotizaciones, clienteFilter, fechaDesde, fechaHasta]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [clienteFilter, estadoFilter, fechaDesde, fechaHasta]);
+  }, [clienteFilter, fechaDesde, fechaHasta]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
 
@@ -153,7 +151,6 @@ const CotizacionesLista = () => {
 
   const handleLimpiarFiltros = () => {
     setClienteFilter("todos");
-    setEstadoFilter("todos");
     setFechaDesde("");
     setFechaHasta("");
     setCurrentPage(1);
@@ -161,7 +158,6 @@ const CotizacionesLista = () => {
 
   const hayFiltrosActivos =
     clienteFilter !== "todos" ||
-    estadoFilter !== "todos" ||
     !!fechaDesde ||
     !!fechaHasta;
 
@@ -255,7 +251,7 @@ const CotizacionesLista = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Cliente */}
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Cliente</label>
@@ -276,23 +272,6 @@ const CotizacionesLista = () => {
                       </SelectItem>
                     ))
                   )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Estado */}
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Estado</label>
-              <Select value={estadoFilter} onValueChange={setEstadoFilter}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Todos los estados" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos los estados</SelectItem>
-                  <SelectItem value="aprobada">Aprobada</SelectItem>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="rechazada">Rechazada</SelectItem>
-                  <SelectItem value="expirada">Expirada</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -404,7 +404,7 @@ const NuevaCotizacion = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {/* Descuento */}
                 <div className="space-y-1.5">
                   <label className="text-xs text-muted-foreground">Descuento (%)</label>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,16 +59,16 @@ const Login = () => {
       </div>
 
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <CardHeader className="space-y-4 text-center pb-8">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center animate-in zoom-in duration-500 delay-100">
-            <FileText className="h-8 w-8 text-primary animate-in spin-in duration-700 delay-200" />
+        <CardHeader className="space-y-5 text-center pb-8">
+          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 animate-in zoom-in duration-500 delay-100">
+            <span className="text-2xl font-bold text-primary-foreground tracking-tight select-none">CJ</span>
           </div>
-          <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-500 delay-300">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-              Cotizaciones
+          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500 delay-300">
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Gestor de Cotizaciones
             </CardTitle>
-            <CardDescription className="text-base">
-              Inicia sesión para gestionar tus cotizaciones
+            <CardDescription className="text-sm font-semibold text-primary uppercase tracking-widest">
+              CJ Producciones
             </CardDescription>
           </div>
         </CardHeader>

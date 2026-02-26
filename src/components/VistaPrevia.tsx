@@ -56,7 +56,7 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
         <div className="flex justify-between items-start mb-6 pb-4 border-b border-border">
           <div className="flex items-center gap-2 text-primary">
             <FileText className="h-5 w-5" />
-            <span className="font-semibold">Cotizaciones</span>
+            <span className="font-semibold">CJ Producciones</span>
           </div>
           <div className="text-right">
             <h2 className="text-lg font-bold text-foreground">COTIZACIÓN</h2>
@@ -67,8 +67,8 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
         {/* Company Info */}
         <div className="mb-6 text-xs text-muted-foreground">
           <p>Medellín, Colombia</p>
-          <p>cjproducciones@gmail.com</p>
-          <p>+57 312 2345 6789</p>
+          <p>info@cjproducciones.com.co</p>
+          <p>+57 315 494 3646</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">

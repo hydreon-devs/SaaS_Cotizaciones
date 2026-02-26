@@ -259,12 +259,12 @@ const Productos = () => {
       )}
 
       {/* ── Two-column layout ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:h-[calc(100vh-60px)]">
 
         {/* ── Create form ─────────────────────────────────────────── */}
-        <div className="md:col-span-1 rounded-xl border bg-card overflow-hidden">
-          <div className="h-0.5 w-full bg-primary" />
-          <div className="p-5 space-y-4">
+        <div className="md:col-span-1 rounded-xl border bg-card overflow-hidden flex flex-col">
+          <div className="h-0.5 w-full bg-primary shrink-0" />
+          <div className="p-5 space-y-4 overflow-y-auto flex-1 min-h-0">
             <p className="text-sm font-medium text-foreground">Nuevo producto</p>
 
             <div className="space-y-1.5">
@@ -348,6 +348,8 @@ const Productos = () => {
               </Select>
             </div>
 
+          </div>
+          <div className="p-5 pt-0 shrink-0">
             <Button className="w-full gap-2" onClick={handleCrear}>
               <Plus className="h-4 w-4" />
               Crear producto
@@ -356,8 +358,8 @@ const Productos = () => {
         </div>
 
         {/* ── Table panel ─────────────────────────────────────────── */}
-        <div className="md:col-span-2 rounded-xl border bg-card overflow-hidden">
-          <div className="overflow-auto max-h-[calc(100vh-280px)]">
+        <div className="md:col-span-2 rounded-xl border bg-card overflow-hidden flex flex-col">
+          <div className="overflow-auto flex-1 min-h-0">
             <Table className="min-w-[700px]">
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-transparent border-b">

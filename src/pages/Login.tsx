@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import logoCJ from "@/assets/LogoCJ.png";
+import logoCJNegro from "@/assets/LogoCJNegro.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,8 +62,9 @@ const Login = () => {
 
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <CardHeader className="space-y-5 text-center pb-8">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 animate-in zoom-in duration-500 delay-100">
-            <span className="text-2xl font-bold text-primary-foreground tracking-tight select-none">CJ</span>
+          <div className="mx-auto animate-in zoom-in duration-500 delay-100">
+            <img src={logoCJ} alt="CJ Producciones" className="h-32 dark:hidden" />
+            <img src={logoCJNegro} alt="CJ Producciones" className="h-32 hidden dark:block" />
           </div>
           <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500 delay-300">
             <CardTitle className="text-2xl font-bold text-foreground">

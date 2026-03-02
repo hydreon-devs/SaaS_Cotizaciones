@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
-import { FileText } from "lucide-react";
 import { DatosCotizacion } from "@/types/cotizacion";
+import logoCJ from "@/assets/LogoCJ.png";
 
 interface VistaPreviaProps {
   datos: DatosCotizacion;
@@ -54,9 +54,8 @@ const VistaPrevia = forwardRef<HTMLDivElement, VistaPreviaProps>(({ datos }, ref
       <div className="bg-card border border-border rounded-lg p-6 text-sm">
         {/* Header */}
         <div className="flex justify-between items-start mb-6 pb-4 border-b border-border">
-          <div className="flex items-center gap-2 text-primary">
-            <FileText className="h-5 w-5" />
-            <span className="font-semibold">CJ Producciones</span>
+          <div className="flex items-center">
+            <img src={logoCJ} alt="CJ Producciones" className="h-14" />
           </div>
           <div className="text-right">
             <h2 className="text-lg font-bold text-foreground">COTIZACIÓN</h2>

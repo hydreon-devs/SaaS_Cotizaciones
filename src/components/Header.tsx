@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { LogOut, Menu, Settings, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logoCJ from "@/assets/LogoCJ.png";
+import logoCJNegro from "@/assets/LogoCJNegro.png";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,14 +72,9 @@ const Header = () => {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/30 shrink-0">
-              <span className="text-xs font-bold text-primary-foreground tracking-tight select-none">CJ</span>
-            </div>
-            <div className="hidden sm:flex flex-col leading-none gap-0.5">
-              <span className="text-sm font-bold text-foreground">CJ Producciones</span>
-              <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Cotizaciones</span>
-            </div>
+          <Link to="/" className="flex items-center hover:opacity-90 transition-opacity shrink-0">
+            <img src={logoCJ} alt="CJ Producciones" className="h-10 dark:hidden" />
+            <img src={logoCJNegro} alt="CJ Producciones" className="h-10 hidden dark:block" />
           </Link>
 
           {/* Desktop navigation */}
@@ -143,14 +140,9 @@ const Header = () => {
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-72">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/30 shrink-0">
-                <span className="text-xs font-bold text-primary-foreground tracking-tight select-none">CJ</span>
-              </div>
-              <div className="flex flex-col leading-none gap-0.5">
-                <span className="text-sm font-bold text-foreground">CJ Producciones</span>
-                <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Cotizaciones</span>
-              </div>
+            <SheetTitle className="flex items-center">
+              <img src={logoCJ} alt="CJ Producciones" className="h-12 dark:hidden" />
+              <img src={logoCJNegro} alt="CJ Producciones" className="h-12 hidden dark:block" />
             </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-2 mt-6">

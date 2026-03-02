@@ -315,10 +315,7 @@ const CotizacionesLista = () => {
         ) : cotizaciones.length === 0 ? (
           /* ── Empty state ──────────────────────────────────────── */
           <div className="rounded-xl border bg-card flex flex-col items-center justify-center py-24 gap-5 text-center animate-fade-in">
-            <div
-              className="h-20 w-20 rounded-2xl flex items-center justify-center"
-              style={{ backgroundColor: "hsl(217 91% 60% / 0.08)" }}
-            >
+            <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
               <FileText className="h-9 w-9 text-primary" />
             </div>
             <div className="space-y-1">
